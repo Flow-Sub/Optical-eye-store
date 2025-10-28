@@ -1,0 +1,91 @@
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  phone?: string;
+  isAdmin: boolean;
+  createdAt: string;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  category: 'frames' | 'sunglasses' | 'accessories';
+  price: number;
+  description: string;
+  images: string[];
+  stock: number;
+  isActive: boolean;
+  features: string[];
+  lensCompatible: boolean;
+}
+
+export interface LensOption {
+  id: string;
+  type: 'single-vision' | 'bifocal' | 'progressive';
+  name: string;
+  price: number;
+  description: string;
+}
+
+export interface LensCoating {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+}
+
+export interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  lensOption?: LensOption;
+  coatings: LensCoating[];
+  prescriptionData?: PrescriptionData;
+}
+
+export interface PrescriptionData {
+  rightEye: {
+    sphere: string;
+    cylinder: string;
+    axis: string;
+  };
+  leftEye: {
+    sphere: string;
+    cylinder: string;
+    axis: string;
+  };
+  pd: string;
+  notes?: string;
+}
+
+export interface Order {
+  id: string;
+  userId: string;
+  items: CartItem[];
+  total: number;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  shippingAddress: ShippingAddress;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ShippingAddress {
+  name: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+}
+
+export interface Appointment {
+  id: string;
+  userId: string;
+  type: 'eye-exam' | 'frame-selection' | 'contact-fitting';
+  date: string;
+  time: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  notes?: string;
+}

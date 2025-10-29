@@ -184,7 +184,7 @@ export function HomePage() {
                   className="rounded-lg"
                 />
                 <img
-                  src="https://images.pexels.com/photos/6608312/pexels-photo-6608312.jpeg?auto=compress&cs=tinysrgb&w=300"
+                  src="https://t4.ftcdn.net/jpg/03/04/53/79/360_F_304537986_2fL7V8CIke4NpW6QCugihh3Vr5dmJl6C.jpg"
                   alt="Frame Selection"
                   className="rounded-lg mt-8"
                 />

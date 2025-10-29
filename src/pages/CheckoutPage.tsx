@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Truck, Shield, CheckCircle } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { createOrder, updateProductStock } from '../services/airtable';
 
 export function CheckoutPage() {
   const { items, total, clearCart } = useCart();
@@ -33,14 +34,71 @@ export function CheckoutPage() {
   const tax = total * 0.08;
   const finalTotal = total + shippingCost + tax;
 
-  const handlePlaceOrder = () => {
-    // In a real app, this would process the payment
+  const handlePlaceOrder = async () => {
+  try {
+    // Generate order ID
+    const orderId = `ORD-${Date.now().toString().slice(-8)}`;
+    
+    // Prepare shipping address
+    const shippingAddress = `${shippingInfo.firstName} ${shippingInfo.lastName}
+${shippingInfo.address}
+${shippingInfo.city}, ${shippingInfo.state} ${shippingInfo.zipCode}
+${shippingInfo.country}
+Phone: ${shippingInfo.phone}`;
+
+    // Prepare order items
+    const orderItems = items.map(item => ({
+      productId: item.product.id,
+      productName: item.product.name,
+      brand: item.product.brand,
+      price: item.product.price,
+      quantity: item.quantity,
+      lensOption: item.lensOption ? {
+        name: item.lensOption.name,
+        price: item.lensOption.price
+      } : null,
+      coatings: item.coatings?.map(c => ({
+        name: c.name,
+        price: c.price
+      })) || [],
+      prescriptionData: item.prescriptionData || null
+    }));
+
+    // Create order in Airtable
+    await createOrder({
+      orderId,
+      customerName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+      customerEmail: shippingInfo.email,
+      customerPhone: shippingInfo.phone,
+      shippingAddress,
+      orderItems: JSON.stringify(orderItems),
+      subtotal: total,
+      shippingCost,
+      tax,
+      orderTotal: finalTotal,
+      numberOfItems: items.reduce((sum, item) => sum + item.quantity, 0),
+      orderStatus: 'pending',
+      orderDate: new Date().toISOString(),
+    });
+
+    // Update product stock
+    for (const item of items) {
+      await updateProductStock(item.product.id, item.quantity);
+    }
+
+    // Show confirmation
     setOrderPlaced(true);
     setStep('confirmation');
+    
+    // Clear cart after delay
     setTimeout(() => {
       clearCart();
     }, 2000);
-  };
+  } catch (error) {
+    console.error('Failed to place order:', error);
+    alert('Failed to place order. Please try again.');
+  }
+};
 
   if (items.length === 0 && !orderPlaced) {
     return (

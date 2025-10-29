@@ -159,3 +159,222 @@ export const deleteProduct = async (id: string): Promise<void> => {
     throw new Error('Failed to delete product');
   }
 };
+
+// ============= APPOINTMENTS =============
+
+const APPOINTMENTS_TABLE = import.meta.env.VITE_AIRTABLE_APPOINTMENTS_TABLE || 'Appointments';
+
+export interface Appointment {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  storeLocation: string;
+  serviceType: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  calendlyEventUri?: string;
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'No-show';
+  notes?: string;
+  createdAt: string;
+}
+
+const mapAirtableToAppointment = (record: any): Appointment => {
+  const fields = record.fields;
+  return {
+    id: record.id,
+    customerName: fields['Customer Name'] || '',
+    customerEmail: fields['Customer Email'] || '',
+    customerPhone: fields['Customer Phone'] || '',
+    storeLocation: fields['Store Location'] || '',
+    serviceType: fields['Service Type'] || '',
+    appointmentDate: fields['Appointment Date'] || '',
+    appointmentTime: fields['Appointment Time'] || '',
+    calendlyEventUri: fields['Calendly Event URI'] || '',
+    status: fields['Status'] || 'Scheduled',
+    notes: fields['Notes'] || '',
+    createdAt: fields['Created At'] || new Date().toISOString(),
+  };
+};
+
+// Create appointment
+export const createAppointment = async (appointmentData: Partial<Appointment>): Promise<Appointment> => {
+  try {
+    const record = await base(APPOINTMENTS_TABLE).create(
+      {
+        'Customer Name': appointmentData.customerName,
+        'Customer Email': appointmentData.customerEmail,
+        'Customer Phone': appointmentData.customerPhone || '',
+        'Store Location': appointmentData.storeLocation,
+        'Service Type': appointmentData.serviceType,
+        'Appointment Date': appointmentData.appointmentDate,
+        'Appointment Time': appointmentData.appointmentTime,
+        'Calendly Event URI': appointmentData.calendlyEventUri || '',
+        'Status': appointmentData.status || 'Scheduled',
+        'Notes': appointmentData.notes || '',
+      },
+      { typecast: true }
+    );
+
+    return mapAirtableToAppointment(record);
+  } catch (error: any) {
+    console.error('Error creating appointment:', error);
+    throw new Error('Failed to create appointment');
+  }
+};
+
+// Fetch all appointments
+export const fetchAppointments = async (): Promise<Appointment[]> => {
+  try {
+    const records = await base(APPOINTMENTS_TABLE)
+      .select({
+        sort: [{ field: 'Appointment Date', direction: 'desc' }],
+      })
+      .all();
+
+    return records.map(mapAirtableToAppointment);
+  } catch (error) {
+    console.error('Error fetching appointments:', error);
+    throw new Error('Failed to fetch appointments');
+  }
+};
+
+// Update appointment status
+export const updateAppointmentStatus = async (
+  id: string,
+  status: 'Scheduled' | 'Completed' | 'Cancelled' | 'No-show'
+): Promise<Appointment> => {
+  try {
+    const record = await base(APPOINTMENTS_TABLE).update(
+      id,
+      { Status: status },
+      { typecast: true }
+    );
+    return mapAirtableToAppointment(record);
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    throw new Error('Failed to update appointment');
+  }
+};
+
+// ============= ORDERS =============
+
+const ORDERS_TABLE = import.meta.env.VITE_AIRTABLE_ORDERS_TABLE || 'Orders';
+
+export interface Order {
+  id: string;
+  orderId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  shippingAddress: string;
+  orderItems: string; // JSON string
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  orderTotal: number;
+  numberOfItems: number;
+  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  orderDate: string;
+}
+
+const mapAirtableToOrder = (record: any): Order => {
+  const fields = record.fields;
+  return {
+    id: record.id,
+    orderId: fields['Order ID'] || '',
+    customerName: fields['Customer Name'] || '',
+    customerEmail: fields['Customer Email'] || '',
+    customerPhone: fields['Customer Phone'] || '',
+    shippingAddress: fields['Shipping Address'] || '',
+    orderItems: fields['Order Items'] || '[]',
+    subtotal: parseFloat(fields['Subtotal']) || 0,
+    shippingCost: parseFloat(fields['Shipping Cost']) || 0,
+    tax: parseFloat(fields['Tax']) || 0,
+    orderTotal: parseFloat(fields['Order Total']) || 0,
+    numberOfItems: parseInt(fields['Number of Items']) || 0,
+    orderStatus: fields['Order Status'] || 'pending',
+    orderDate: fields['Order Date'] || new Date().toISOString(),
+  };
+};
+
+// Create order
+export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<Order> => {
+  try {
+    const record = await base(ORDERS_TABLE).create(
+      {
+        'Order ID': orderData.orderId,
+        'Customer Name': orderData.customerName,
+        'Customer Email': orderData.customerEmail,
+        'Customer Phone': orderData.customerPhone,
+        'Shipping Address': orderData.shippingAddress,
+        'Order Items': orderData.orderItems,
+        'Subtotal': orderData.subtotal,
+        'Shipping Cost': orderData.shippingCost,
+        'Tax': orderData.tax,
+        'Order Total': orderData.orderTotal,
+        'Number of Items': orderData.numberOfItems,
+        'Order Status': orderData.orderStatus,
+        'Order Date': orderData.orderDate,
+      },
+      { typecast: true }
+    );
+
+    return mapAirtableToOrder(record);
+  } catch (error: any) {
+    console.error('Error creating order:', error);
+    throw new Error('Failed to create order');
+  }
+};
+
+// Fetch all orders
+export const fetchOrders = async (): Promise<Order[]> => {
+  try {
+    const records = await base(ORDERS_TABLE)
+      .select({
+        sort: [{ field: 'Order Date', direction: 'desc' }],
+      })
+      .all();
+
+    return records.map(mapAirtableToOrder);
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    throw new Error('Failed to fetch orders');
+  }
+};
+
+// Update order status
+export const updateOrderStatus = async (
+  id: string,
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+): Promise<Order> => {
+  try {
+    const record = await base(ORDERS_TABLE).update(
+      id,
+      { 'Order Status': status },
+      { typecast: true }
+    );
+    return mapAirtableToOrder(record);
+  } catch (error) {
+    console.error('Error updating order:', error);
+    throw new Error('Failed to update order');
+  }
+};
+
+// Update product stock
+// Update product stock
+export const updateProductStock = async (productId: string, quantitySold: number): Promise<void> => {
+  try {
+    const product = await base(PRODUCTS_TABLE).find(productId);
+    const currentStock = parseInt(String(product.fields['Stock Quantity'] || 0)) || 0;  // ← FIXED LINE
+    const newStock = Math.max(0, currentStock - quantitySold);
+    
+    await base(PRODUCTS_TABLE).update(
+      productId,
+      { 'Stock Quantity': newStock },
+      { typecast: true }
+    );
+  } catch (error) {
+    console.error('Error updating stock:', error);
+  }
+};

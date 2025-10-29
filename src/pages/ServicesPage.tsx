@@ -1,16 +1,84 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Clock, Users, Award, CheckCircle, Calendar, Phone, MapPin } from 'lucide-react';
+import { Eye, Clock, Users, Award, CheckCircle, Calendar, Phone, MapPin, Navigation } from 'lucide-react';
+import { createAppointment } from '../services/airtable';
 
-// Calendly Popup Handler
-const openCalendlyPopup = () => {
-  if (window.Calendly) {
-    window.Calendly.initPopupWidget({ url: 'https://calendly.com/eyeoptical007/30min' });
+interface StoreLocation {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  hours: string;
+  image: string;
+  calendlyUrl: string;
+}
+
+declare global {
+  interface Window {
+    Calendly: {
+      initPopupWidget: (options: {
+        url: string;
+        prefill?: {
+          name?: string;
+          email?: string;
+          customAnswers?: Record<string, string>;
+        };
+      }) => void;
+    };
   }
-  return false;
-};
+}
+
+const storeLocations: StoreLocation[] = [
+  {
+    id: 'manhattan',
+    name: 'Manhattan Flagship Store',
+    address: '123 Fifth Avenue, New York, NY 10001',
+    phone: '(212) 555-0101',
+    hours: 'Mon-Sat: 9AM-8PM, Sun: 10AM-6PM',
+    image: 'https://antdisplay.com/pub/media/magefan_blog/4_1_3.jpg',
+    calendlyUrl: 'https://calendly.com/eyeoptical007/eye-care-appointment-1'
+  },
+  {
+    id: 'brooklyn',
+    name: 'Brooklyn Heights',
+    address: '456 Court Street, Brooklyn, NY 11231',
+    phone: '(718) 555-0202',
+    hours: 'Mon-Sat: 9AM-7PM, Sun: 11AM-5PM',
+    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrOEoKkJZTc-aa_taK0LB9H21kbFwTUQht8w&s',
+    calendlyUrl: 'https://calendly.com/eyeoptical007/brooklyn-appointment'
+  },
+  {
+    id: 'queens',
+    name: 'Queens Center',
+    address: '789 Queens Blvd, Queens, NY 11374',
+    phone: '(718) 555-0303',
+    hours: 'Mon-Sat: 10AM-8PM, Sun: 10AM-6PM',
+    image: 'https://i.pinimg.com/originals/3e/c1/41/3ec141fb4407ad0d429a23247f899adb.jpg',
+    calendlyUrl: 'https://calendly.com/eyeoptical007/queens-appointment'
+  },
+  {
+    id: 'bronx',
+    name: 'Bronx Plaza',
+    address: '321 Fordham Road, Bronx, NY 10458',
+    phone: '(718) 555-0404',
+    hours: 'Mon-Sat: 9AM-7PM, Sun: 11AM-5PM',
+    image: 'https://d3995ea24pmi7m.cloudfront.net/media/stores/store-images/TDRA/mobile/TDRA_2.webp',
+    calendlyUrl: 'https://calendly.com/eyeoptical007/bronx-appointment'
+  }
+];
 
 export function ServicesPage() {
+  const [selectedLocation, setSelectedLocation] = useState<StoreLocation | null>(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
+  const [bookingStep, setBookingStep] = useState<'location' | 'service' | 'calendly'>('location');
+  const [selectedService, setSelectedService] = useState('');
+  const [bookingData, setBookingData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    notes: ''
+  });
+
   // Load Calendly popup widget
   React.useEffect(() => {
     const link = document.createElement('link');
@@ -25,15 +93,62 @@ export function ServicesPage() {
 
     return () => {
       const existingLink = document.querySelector('link[href="https://assets.calendly.com/assets/external/widget.css"]');
-      if (existingLink) {
-        document.head.removeChild(existingLink);
-      }
+      if (existingLink) document.head.removeChild(existingLink);
       const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
-      if (existingScript) {
-        document.body.removeChild(existingScript);
-      }
+      if (existingScript) document.body.removeChild(existingScript);
     };
   }, []);
+
+  const openBookingFlow = () => {
+    setShowBookingModal(true);
+    setBookingStep('location');
+  };
+
+  const handleLocationSelect = (location: StoreLocation) => {
+    setSelectedLocation(location);
+    setBookingStep('service');
+  };
+
+  const handleServiceSelect = (serviceTitle: string) => {
+    setSelectedService(serviceTitle);
+    setBookingStep('calendly');
+  };
+
+  const openCalendly = () => {
+    if (!selectedLocation) return;
+
+    if (window.Calendly) {
+      window.Calendly.initPopupWidget({
+        url: selectedLocation.calendlyUrl
+      });
+    }
+  };
+
+  const handleBookingSubmit = async () => {
+    if (!selectedLocation || !bookingData.name || !bookingData.email) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    openCalendly();
+
+    // Save to Airtable
+    try {
+      await createAppointment({
+        customerName: bookingData.name,
+        customerEmail: bookingData.email,
+        customerPhone: bookingData.phone,
+        storeLocation: selectedLocation.name,
+        serviceType: selectedService,
+        appointmentDate: new Date().toISOString().split('T')[0], // Will be updated by Calendly webhook
+        appointmentTime: 'TBD', // Will be updated by Calendly webhook
+        status: 'Scheduled',
+        notes: bookingData.notes
+      });
+    } catch (error) {
+      console.error('Failed to save appointment:', error);
+    }
+  };
 
   const services = [
     {
@@ -168,12 +283,63 @@ export function ServicesPage() {
               Comprehensive eye examinations, expert fittings, and personalized care from our experienced team of optometrists and eye care specialists.
             </p>
             <button
-              onClick={openCalendlyPopup}
+              onClick={openBookingFlow}
               className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors inline-flex items-center space-x-2"
             >
               <Calendar className="h-5 w-5" />
-              <span>Schedule Your Appointment</span>
+              <span>Book Appointment</span>
             </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Store Locations */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Locations</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Visit us at any of our convenient locations across New York
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {storeLocations.map((location) => (
+              <div key={location.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden border border-gray-200">
+                <img
+                  src={location.image}
+                  alt={location.name}
+                  className="w-full h-48 object-cover"
+                />
+                <div className="p-6">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{location.name}</h3>
+                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                    <div className="flex items-start space-x-2">
+                      <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{location.address}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Phone className="h-4 w-4 flex-shrink-0" />
+                      <span>{location.phone}</span>
+                    </div>
+                    <div className="flex items-start space-x-2">
+                      <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                      <span>{location.hours}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedLocation(location);
+                      openBookingFlow();
+                    }}
+                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    <span>Book Here</span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -256,69 +422,183 @@ export function ServicesPage() {
         </div>
       </section>
 
-      {/* Insurance & Payment */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold text-gray-900 mb-6">Insurance & Payment Options</h2>
-              <p className="text-xl text-gray-600 mb-8">
-                We accept most major insurance plans and offer flexible payment options to make quality eye care accessible.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Most major insurance plans accepted</span>
+      {/* Booking Modal */}
+      {showBookingModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold">Book Your Appointment</h2>
+                <button onClick={() => setShowBookingModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div className="flex items-center space-x-4 mt-4">
+                <div className={`flex items-center ${bookingStep === 'location' ? 'text-white' : 'text-blue-200'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'location' ? 'bg-white text-blue-600' : 'bg-blue-500'}`}>1</div>
+                  <span className="ml-2">Location</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Flexible payment plans available</span>
+                <div className="flex-1 h-0.5 bg-blue-400"></div>
+                <div className={`flex items-center ${bookingStep === 'service' ? 'text-white' : 'text-blue-200'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'service' ? 'bg-white text-blue-600' : 'bg-blue-500'}`}>2</div>
+                  <span className="ml-2">Service</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">HSA/FSA cards welcome</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <CheckCircle className="h-5 w-5 text-green-500" />
-                  <span className="text-gray-700">Senior and student discounts</span>
+                <div className="flex-1 h-0.5 bg-blue-400"></div>
+                <div className={`flex items-center ${bookingStep === 'calendly' ? 'text-white' : 'text-blue-200'}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'calendly' ? 'bg-white text-blue-600' : 'bg-blue-500'}`}>3</div>
+                  <span className="ml-2">Schedule</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-8 shadow-sm">
-              <h3 className="text-2xl font-semibold text-gray-900 mb-6">Contact Us</h3>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <Phone className="h-5 w-5 text-blue-600" />
-                  <span className="text-gray-700">(555) 123-4567</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  <span className="text-gray-700">123 Vision Street, City, State 12345</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                  <div className="text-gray-700">
-                    <div>Mon-Fri: 9:00 AM - 7:00 PM</div>
-                    <div>Sat: 9:00 AM - 6:00 PM</div>
-                    <div>Sun: 11:00 AM - 5:00 PM</div>
+            <div className="p-8">
+              {/* Step 1: Select Location */}
+              {bookingStep === 'location' && (
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Preferred Location</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {storeLocations.map((location) => (
+                      <div
+                        key={location.id}
+                        onClick={() => handleLocationSelect(location)}
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg ${
+                          selectedLocation?.id === location.id
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-gray-200 hover:border-blue-300'
+                        }`}
+                      >
+                        <h4 className="font-semibold text-gray-900 mb-2">{location.name}</h4>
+                        <div className="space-y-1 text-sm text-gray-600">
+                          <div className="flex items-start space-x-2">
+                            <MapPin className="h-4 w-4 mt-0.5" />
+                            <span>{location.address}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Phone className="h-4 w-4" />
+                            <span>{location.phone}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-              
-              <div className="mt-6">
-                <button
-                  onClick={openCalendlyPopup}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Schedule Appointment
-                </button>
-              </div>
+              )}
+
+              {/* Step 2: Select Service */}
+              {bookingStep === 'service' && (
+                <div>
+                  <button
+                    onClick={() => setBookingStep('location')}
+                    className="text-blue-600 hover:text-blue-700 mb-4 flex items-center"
+                  >
+                    ← Back to locations
+                  </button>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Select Service Type</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {services.map((service) => (
+                      <div
+                        key={service.id}
+                        onClick={() => handleServiceSelect(service.title)}
+                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg ${
+                          selectedService === service.title
+                            ? 'border-blue-600 bg-blue-50'
+                            : 'border-gray-200 hover:border-blue-300'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-semibold text-gray-900">{service.title}</h4>
+                          <span className="text-blue-600 font-bold">{service.price}</span>
+                        </div>
+                        <p className="text-sm text-gray-600">{service.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Step 3: Enter Details & Schedule */}
+              {bookingStep === 'calendly' && (
+                <div>
+                  <button
+                    onClick={() => setBookingStep('service')}
+                    className="text-blue-600 hover:text-blue-700 mb-4 flex items-center"
+                  >
+                    ← Back to services
+                  </button>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Information</h3>
+                  
+                  <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-gray-600">Location</p>
+                        <p className="font-semibold">{selectedLocation?.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Service</p>
+                        <p className="font-semibold">{selectedService}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                      <input
+                        type="text"
+                        value={bookingData.name}
+                        onChange={(e) => setBookingData({ ...bookingData, name: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="John Doe"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                      <input
+                        type="email"
+                        value={bookingData.email}
+                        onChange={(e) => setBookingData({ ...bookingData, email: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="john@example.com"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                      <input
+                        type="tel"
+                        value={bookingData.phone}
+                        onChange={(e) => setBookingData({ ...bookingData, phone: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="(555) 123-4567"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                      <textarea
+                        value={bookingData.notes}
+                        onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
+                        rows={3}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Any special requirements or questions..."
+                      />
+                    </div>
+
+                    <button
+                      onClick={handleBookingSubmit}
+                      disabled={!bookingData.name || !bookingData.email}
+                      className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+                    >
+                      <Calendar className="h-5 w-5" />
+                      <span>Continue to Schedule</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
-      </section>
+      )}
     </div>
   );
 }

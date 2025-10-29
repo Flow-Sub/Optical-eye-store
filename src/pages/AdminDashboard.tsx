@@ -1,14 +1,42 @@
 import React, { useState } from 'react';
-import { BarChart3, Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Calendar, Eye, RefreshCw, Plus } from 'lucide-react';
+import { BarChart3, Package, ShoppingCart, Users, TrendingUp, AlertTriangle, Calendar, Eye, RefreshCw, Plus, Trash2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useProducts } from '../hooks/useProducts';
 import { CreateProductModal } from './CreateProductModal';
+import { deleteProduct } from '../services/airtable';
+import { AppointmentsView } from './AppointmentsView';
+import { OrdersView } from './OrdersView';
 
 export function AdminDashboard() {
   const { user } = useAuth();
   const { products, loading, error, refetch } = useProducts();
   const [activeTab, setActiveTab] = useState('overview');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const handleDeleteProduct = async () => {
+    if (!productToDelete) return;
+
+    setDeletingId(productToDelete.id);
+    try {
+      await deleteProduct(productToDelete.id);
+      await refetch();
+      setShowDeleteConfirm(false);
+      setProductToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete product:', error);
+      alert('Failed to delete product. Please try again.');
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const confirmDelete = (id: string, name: string) => {
+    setProductToDelete({ id, name });
+    setShowDeleteConfirm(true);
+  };
 
   if (!user?.isAdmin) {
     return (
@@ -178,6 +206,7 @@ export function AdminDashboard() {
           <TabButton id="overview" label="Overview" icon={BarChart3} />
           <TabButton id="inventory" label="Inventory" icon={Package} />
           <TabButton id="orders" label="Orders" icon={ShoppingCart} />
+          <TabButton id="appointments" label="Appointments" icon={Calendar} />
         </div>
 
         {/* Content based on active tab */}
@@ -251,89 +280,151 @@ export function AdminDashboard() {
         )}
 
         {activeTab === 'inventory' && (
-          <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">Inventory Management</h2>
-              <span className="text-sm text-gray-600">{products.length} products loaded from Airtable</span>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Product
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Category
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Stock
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Price
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Lens Compatible
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <img 
-                            className="h-10 w-10 rounded-lg object-cover" 
-                            src={product.images[0]} 
-                            alt={product.name} 
-                          />
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                            <div className="text-sm text-gray-500">{product.brand}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
-                        {product.category}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          product.stock === 0 ? 'bg-red-100 text-red-800' :
-                          product.stock < 10 ? 'bg-orange-100 text-orange-800' :
-                          'bg-green-100 text-green-800'
-                        }`}>
-                          {product.stock} units
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        ${product.price.toFixed(2)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          product.lensCompatible ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {product.lensCompatible ? 'Yes' : 'No'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                          product.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {product.isActive ? 'Active' : 'Inactive'}
-                        </span>
-                      </td>
+          <>
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">Inventory Management</h2>
+                <span className="text-sm text-gray-600">{products.length} products loaded from Airtable</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Product
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Category
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Stock
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Price
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Lens Compatible
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {products.map((product) => (
+                      <tr key={product.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <img 
+                              className="h-10 w-10 rounded-lg object-cover" 
+                              src={product.images[0]} 
+                              alt={product.name} 
+                            />
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                              <div className="text-sm text-gray-500">{product.brand}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 capitalize">
+                          {product.category}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            product.stock === 0 ? 'bg-red-100 text-red-800' :
+                            product.stock < 10 ? 'bg-orange-100 text-orange-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {product.stock} units
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${product.price.toFixed(2)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            product.lensCompatible ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {product.lensCompatible ? 'Yes' : 'No'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            product.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {product.isActive ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            onClick={() => confirmDelete(product.id, product.name)}
+                            disabled={deletingId === product.id}
+                            className="text-red-600 hover:text-red-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Delete product"
+                          >
+                            {deletingId === product.id ? (
+                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                            ) : (
+                              <Trash2 className="h-5 w-5" />
+                            )}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteConfirm && productToDelete && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <div className="bg-white rounded-lg max-w-md w-full p-6">
+                  <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mx-auto mb-4">
+                    <Trash2 className="h-6 w-6 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
+                    Delete Product
+                  </h3>
+                  <p className="text-gray-600 text-center mb-6">
+                    Are you sure you want to delete <strong>{productToDelete.name}</strong>? This action cannot be undone.
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => {
+                        setShowDeleteConfirm(false);
+                        setProductToDelete(null);
+                      }}
+                      disabled={deletingId !== null}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteProduct}
+                      disabled={deletingId !== null}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 flex items-center justify-center space-x-2"
+                    >
+                      {deletingId ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          <span>Deleting...</span>
+                        </>
+                      ) : (
+                        <span>Delete</span>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
 
-        {activeTab === 'orders' && (
+        {/* {activeTab === 'orders' && (
           <div className="bg-white rounded-lg shadow-sm p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Order Management</h2>
             <div className="text-gray-600">
@@ -347,13 +438,43 @@ export function AdminDashboard() {
               </ul>
             </div>
           </div>
-        )}
+        )} */}
+
+        {activeTab === 'appointments' && <AppointmentsView />}
+
+        {activeTab === 'orders' && <OrdersView />}
 
         <CreateProductModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={refetch}
         />
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && productToDelete && (
+          <div className="fixed inset-0 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h3>
+              <p className="text-gray-600 mb-4">
+                Are you sure you want to delete the product "<span className="font-medium">{productToDelete.name}</span>"?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteProduct}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

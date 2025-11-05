@@ -1,6 +1,7 @@
+/* src/components/Product/ProductCard.tsx */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Eye, Zap, Heart, Sparkles } from 'lucide-react';
+import { ShoppingCart, Star, Eye, Heart, Zap, Sparkles } from 'lucide-react';
 import { Product } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { WishlistButton } from '../Wishlist/WishlistButton';
@@ -11,148 +12,138 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [showToast, setShowToast] = useState(false);
 
-  const handleQuickAdd = (e: React.MouseEvent) => {
+  const quickAdd = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (product.lensCompatible) {
-      return;
-    }
+    if (product.lensCompatible || product.stock === 0) return;
     addToCart(product);
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 2000);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 2000);
   };
 
   return (
-    <div className="group relative bg-white rounded-2xl shadow-md hover:shadow-2xl transition-all duration-500 overflow-hidden border border-gray-100 transform hover:-translate-y-2">
-      {/* Success Toast */}
-      {showSuccess && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold animate-bounce">
-          Added to cart! ✓
+    <div className="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-200 overflow-hidden">
+      
+      {/* Toast */}
+      {showToast && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-light shadow-lg animate-fade-in">
+          Added to cart
         </div>
       )}
 
-      {/* Image Container */}
+      {/* Image */}
       <Link to={`/product/${product.id}`} className="block relative">
-        <div className="aspect-square overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative">
+        <div className="aspect-square bg-gray-100 overflow-hidden">
           <img
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
           />
-          
-          {/* Gradient Overlay on Hover */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col space-y-2">
           {product.stock === 0 && (
-            <span className="bg-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
-              <span>Out of Stock</span>
+            <span className="bg-red-600 text-white text-xs font-medium px-3 py-1.5 rounded-full">
+              Out of Stock
             </span>
           )}
           {product.stock > 0 && product.stock < 10 && (
-            <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1 animate-pulse">
+            <span className="bg-orange-500 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center space-x-1">
               <Zap className="h-3 w-3" />
               <span>Only {product.stock} left</span>
             </span>
           )}
           {product.lensCompatible && (
-            <span className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center space-x-1">
+            <span className="bg-gray-900 text-white text-xs font-medium px-3 py-1.5 rounded-full flex items-center space-x-1">
               <Sparkles className="h-3 w-3" />
-              <span>Customizable</span>
+              <span>Custom</span>
             </span>
           )}
         </div>
-      </Link>
 
-      {/* Quick Actions - Top Right */}
-      <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-        <div className="flex flex-col space-y-2">
+        {/* Quick Actions */}
+        <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col space-y-2">
           <Link
             to={`/product/${product.id}`}
-            className="p-2.5 bg-white rounded-full shadow-lg hover:bg-blue-50 hover:scale-110 transition-all duration-200 border border-gray-200"
+            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition"
             title="Quick View"
           >
-            <Eye className="h-5 w-5 text-gray-700 hover:text-blue-600" />
+            <Eye className="h-5 w-5 text-gray-700" />
           </Link>
-          <div className="p-2.5 bg-white rounded-full shadow-lg hover:bg-red-50 hover:scale-110 transition-all duration-200 border border-gray-200">
+          <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-50 transition">
             <WishlistButton product={product} />
-          </div>
+          </button>
         </div>
-      </div>
+      </Link>
 
-      {/* Product Info */}
-      <div className="p-5">
+      {/* Content */}
+      <div className="p-6">
         <Link to={`/product/${product.id}`} className="block mb-3">
-          <h3 className="text-lg font-bold text-gray-900 mb-1 hover:text-blue-600 transition-colors line-clamp-1 group-hover:text-blue-600">
+          <h3 className="text-lg font-light text-gray-900 line-clamp-1 group-hover:text-gray-700 transition-colors">
             {product.name}
           </h3>
-          <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">{product.brand}</p>
+          <p className="text-sm text-gray-600 font-light">{product.brand}</p>
         </Link>
-        
+
         {/* Rating */}
         <div className="flex items-center mb-3">
-          <div className="flex items-center">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`h-4 w-4 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-gray-500 ml-2 font-medium">(24)</span>
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`h-4 w-4 ${i < 4 ? 'text-amber-400 fill-current' : 'text-gray-300'}`}
+            />
+          ))}
+          <span className="ml-2 text-xs text-gray-500">(24)</span>
         </div>
 
-        {/* Price & Add to Cart */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex flex-col">
-            <span className="text-2xl font-extrabold text-gray-900">
+        {/* Price + CTA */}
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-2xl font-light text-gray-900">
               ${product.price.toFixed(2)}
             </span>
             {product.lensCompatible && (
-              <span className="text-xs text-gray-500 font-medium">+ lens options</span>
+              <span className="ml-2 text-sm text-gray-500">+ lens</span>
             )}
           </div>
 
           <button
-            onClick={handleQuickAdd}
-            disabled={product.stock === 0}
-            className={`p-3 rounded-full transition-all transform shadow-md ${
-              product.stock === 0
+            onClick={quickAdd}
+            disabled={product.stock === 0 || product.lensCompatible}
+            className={`p-3 rounded-lg transition-colors ${
+              product.stock === 0 || product.lensCompatible
                 ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:scale-110 hover:shadow-xl'
+                : 'bg-gray-900 text-white hover:bg-gray-800'
             }`}
-            title={product.lensCompatible ? "View Details" : "Add to Cart"}
           >
             <ShoppingCart className="h-5 w-5" />
           </button>
         </div>
 
         {/* Features */}
-        <div className="border-t border-gray-100 pt-3">
-          <div className="flex flex-wrap gap-1.5">
-            {product.features.slice(0, 2).map((feature, index) => (
-              <span
-                key={index}
-                className="text-xs bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 px-2.5 py-1 rounded-full font-medium border border-blue-100"
-              >
-                {feature}
-              </span>
-            ))}
-            {product.features.length > 2 && (
-              <span className="text-xs text-gray-500 px-2 py-1 font-medium">
-                +{product.features.length - 2} more
-              </span>
-            )}
+        {product.features.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex flex-wrap gap-1.5">
+              {product.features.slice(0, 2).map((f, i) => (
+                <span
+                  key={i}
+                  className="text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-full font-light"
+                >
+                  {f}
+                </span>
+              ))}
+              {product.features.length > 2 && (
+                <span className="text-xs text-gray-500 font-light">
+                  +{product.features.length - 2} more
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
-
-      {/* Hover Border Effect */}
-      <div className="absolute inset-0 rounded-2xl border-2 border-transparent group-hover:border-blue-500 transition-all duration-300 pointer-events-none"></div>
     </div>
   );
 }

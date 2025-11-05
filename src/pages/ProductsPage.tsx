@@ -3,7 +3,7 @@ import { ProductGrid } from '../components/Product/ProductGrid';
 import { ProductFilters } from '../components/Product/ProductFilters';
 import { useProducts } from '../hooks/useProducts';
 import { Product } from '../types';
-import { RefreshCw, AlertCircle, ShoppingBag, TrendingUp, Sparkles, Package, Grid3x3 } from 'lucide-react';
+import { RefreshCw, AlertCircle, ShoppingBag, Package, Grid3x3, TrendingUp } from 'lucide-react';
 
 export function ProductsPage() {
   const { products, loading, error, refetch } = useProducts();
@@ -17,7 +17,6 @@ export function ProductsPage() {
     sortBy: 'name'
   });
 
-  // Extract unique values for filter options
   const filterOptions = {
     categories: Array.from(new Set(products.map(p => p.category))),
     brands: Array.from(new Set(products.map(p => p.brand))),
@@ -27,73 +26,46 @@ export function ProductsPage() {
   useEffect(() => {
     let filtered = [...products];
 
-    if (filters.category) {
-      filtered = filtered.filter(product => product.category === filters.category);
-    }
-
-    if (filters.brand) {
-      filtered = filtered.filter(product => product.brand === filters.brand);
-    }
-
-    filtered = filtered.filter(product => 
-      product.price >= filters.minPrice && product.price <= filters.maxPrice
-    );
+    if (filters.category) filtered = filtered.filter(p => p.category === filters.category);
+    if (filters.brand) filtered = filtered.filter(p => p.brand === filters.brand);
+    filtered = filtered.filter(p => p.price >= filters.minPrice && p.price <= filters.maxPrice);
 
     switch (filters.sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'newest':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      case 'rating':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
-        break;
-      default:
-        break;
+      case 'price-low': filtered.sort((a, b) => a.price - b.price); break;
+      case 'price-high': filtered.sort((a, b) => b.price - a.price); break;
+      case 'name': filtered.sort((a, b) => a.name.localeCompare(b.name)); break;
+      default: break;
     }
 
     setFilteredProducts(filtered);
   }, [filters, products]);
 
+  /* ────────────────────── LOADING ────────────────────── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
         <div className="text-center">
-          <div className="relative mb-8">
-            <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-t-4 border-blue-600 mx-auto"></div>
-            <ShoppingBag className="h-10 w-10 text-blue-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Loading Products</h3>
-          <p className="text-gray-600">Fetching the latest eyewear collection...</p>
-          <div className="mt-6 flex items-center justify-center space-x-2">
-            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce"></div>
-            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-            <div className="h-2 w-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-          </div>
+          <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900 mb-6"></div>
+          <h3 className="text-2xl font-light text-gray-900">Loading Products</h3>
+          <p className="text-gray-600 mt-2">Fetching the latest collection...</p>
         </div>
       </div>
     );
   }
 
+  /* ────────────────────── ERROR ────────────────────── */
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-lg bg-white rounded-3xl shadow-2xl p-10 border border-gray-100">
-          <div className="bg-gradient-to-br from-red-100 to-orange-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <AlertCircle className="h-12 w-12 text-red-600" />
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="text-center max-w-lg">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="h-10 w-10 text-red-600" />
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">Oops! Something Went Wrong</h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">{error}</p>
+          <h2 className="text-3xl font-light text-gray-900 mb-4">Something Went Wrong</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={refetch}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 inline-flex items-center space-x-3 shadow-lg transform hover:scale-105 transition-all"
+            className="bg-gray-900 text-white px-8 py-3.5 font-light hover:bg-gray-800 transition-colors inline-flex items-center space-x-2"
           >
             <RefreshCw className="h-5 w-5" />
             <span>Try Again</span>
@@ -103,20 +75,18 @@ export function ProductsPage() {
     );
   }
 
-  if (products.length === 0) {
+  if (!products.length) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4">
-        <div className="text-center max-w-lg bg-white rounded-3xl shadow-2xl p-10 border border-gray-100">
-          <div className="bg-gradient-to-br from-gray-100 to-blue-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Package className="h-12 w-12 text-gray-400" />
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="text-center max-w-lg">
+          <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Package className="h-10 w-10 text-gray-400" />
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 mb-4">No Products Yet</h2>
-          <p className="text-gray-600 mb-8 leading-relaxed">
-            Our collection is being curated. Check back soon for premium eyewear!
-          </p>
+          <h2 className="text-3xl font-light text-gray-900 mb-4">No Products Yet</h2>
+          <p className="text-gray-600 mb-6">Our collection is being curated. Check back soon!</p>
           <button
             onClick={refetch}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl font-bold hover:from-blue-700 hover:to-indigo-700 inline-flex items-center space-x-3 shadow-lg transform hover:scale-105 transition-all"
+            className="bg-gray-900 text-white px-8 py-3.5 font-light hover:bg-gray-800 transition-colors inline-flex items-center space-x-2"
           >
             <RefreshCw className="h-5 w-5" />
             <span>Refresh</span>
@@ -127,154 +97,112 @@ export function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 text-white relative overflow-hidden">
-        {/* Decorative Elements */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -mr-48 -mt-48"></div>
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-white opacity-5 rounded-full -ml-36 -mb-36"></div>
-        
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 relative z-10">
+    <div className="min-h-screen bg-white">
+
+      {/* HERO */}
+      <section className="bg-white py-16 lg:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="flex items-center justify-center mb-6">
-              <div className="bg-white bg-opacity-20 backdrop-blur-sm rounded-full px-5 py-2 flex items-center space-x-2">
-                <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-yellow-300 font-bold text-sm uppercase tracking-wider">Premium Collection</span>
-              </div>
-            </div>
-            
-            <h1 className="text-5xl md:text-6xl font-extrabold mb-5 bg-clip-text text-transparent bg-gradient-to-r from-white via-blue-100 to-purple-100">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-gray-900 mb-6">
               Shop Eyewear
             </h1>
-            
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Discover our curated collection of premium frames, designer sunglasses, and exclusive accessories
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto mb-10 leading-relaxed">
+              Discover our curated collection of premium frames, designer sunglasses, and exclusive accessories.
             </p>
 
             {/* Stats */}
-            <div className="flex flex-wrap items-center justify-center gap-6">
-              <div className="bg-white bg-opacity-20 backdrop-blur-md rounded-2xl px-8 py-4 border border-white border-opacity-30 transform hover:scale-105 transition-all shadow-lg">
-                <div className="flex items-center space-x-3">
-                  <Package className="h-8 w-8 text-blue-200" />
-                  <div className="text-left">
-                    <p className="text-sm text-blue-200 font-semibold uppercase tracking-wide">Products</p>
-                    <p className="text-3xl font-extrabold">{products.length}</p>
-                  </div>
-                </div>
+            <div className="flex flex-wrap justify-center gap-8 mt-12">
+              <div className="text-center">
+                <p className="text-3xl font-light text-gray-900">{products.length}</p>
+                <p className="text-sm text-gray-600">Products</p>
               </div>
-              
-              <div className="bg-white bg-opacity-20 backdrop-blur-md rounded-2xl px-8 py-4 border border-white border-opacity-30 transform hover:scale-105 transition-all shadow-lg">
-                <div className="flex items-center space-x-3">
-                  <Grid3x3 className="h-8 w-8 text-purple-200" />
-                  <div className="text-left">
-                    <p className="text-sm text-purple-200 font-semibold uppercase tracking-wide">Categories</p>
-                    <p className="text-3xl font-extrabold">{filterOptions.categories.length}</p>
-                  </div>
-                </div>
+              <div className="text-center">
+                <p className="text-3xl font-light text-gray-900">{filterOptions.categories.length}</p>
+                <p className="text-sm text-gray-600">Categories</p>
               </div>
-              
-              <div className="bg-white bg-opacity-20 backdrop-blur-md rounded-2xl px-8 py-4 border border-white border-opacity-30 transform hover:scale-105 transition-all shadow-lg">
-                <div className="flex items-center space-x-3">
-                  <TrendingUp className="h-8 w-8 text-green-200" />
-                  <div className="text-left">
-                    <p className="text-sm text-green-200 font-semibold uppercase tracking-wide">Brands</p>
-                    <p className="text-3xl font-extrabold">{filterOptions.brands.length}</p>
-                  </div>
-                </div>
+              <div className="text-center">
+                <p className="text-3xl font-light text-gray-900">{filterOptions.brands.length}</p>
+                <p className="text-sm text-gray-600">Brands</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filters Sidebar */}
-          <div className="lg:w-80 flex-shrink-0">
-            <div className="sticky top-24">
-              <ProductFilters
-                filters={filters}
-                onFilterChange={setFilters}
-                options={filterOptions}
-                isOpen={isFiltersOpen}
-                onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
-              />
-            </div>
-          </div>
+      {/* MAIN CONTENT */}
+      {/* ───── FULL‑WIDTH FILTER + GRID ───── */}
+      <section className="py-16 bg-gray-50">
+        {/* Remove max-w-7xl → full width */}
+        <div className="w-full">
 
-          {/* Products Grid */}
-          <div className="flex-1">
-            {/* Results Header */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-8 border border-gray-100">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex-1">
-                  <h2 className="text-2xl font-extrabold text-gray-900 mb-2 flex items-center">
-                    {filteredProducts.length === products.length ? (
-                      <>
-                        <Sparkles className="h-6 w-6 text-yellow-500 mr-2" />
-                        All Products
-                      </>
-                    ) : (
-                      <>
-                        <Grid3x3 className="h-6 w-6 text-blue-600 mr-2" />
-                        Filtered Results
-                      </>
-                    )}
-                  </h2>
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-2">
-                      <TrendingUp className="h-5 w-5 text-green-500" />
-                      <p className="text-gray-600 font-medium">
-                        Showing <span className="font-bold text-gray-900">{filteredProducts.length}</span> of{' '}
-                        <span className="font-bold text-gray-900">{products.length}</span> products
-                      </p>
-                    </div>
-                    <span className="bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-full border border-blue-200">
-                      from Airtable
-                    </span>
+          {/* Optional inner padding – keeps content from touching screen edges */}
+          <div className="px-4 sm:px-6 lg:px-8">
+
+            {/* Flex row – filters on left, grid on right */}
+            <div className="flex flex-col lg:flex-row gap-12">
+
+              {/* FILTERS – fixed width, sticky */}
+              <aside className="lg:w-80">
+                <div className="sticky top-24">
+                  <ProductFilters
+                    filters={filters}
+                    onFilterChange={setFilters}
+                    options={filterOptions}
+                    isOpen={isFiltersOpen}
+                    onToggle={() => setIsFiltersOpen(!isFiltersOpen)}
+                  />
+                </div>
+              </aside>
+
+              {/* PRODUCTS GRID – takes remaining space */}
+              <main className="flex-1 min-w-0">
+                {/* Results Header */}
+                <div className="flex justify-between items-center mb-8">
+                  <div>
+                    <h2 className="text-2xl md:text-3xl font-light text-gray-900">
+                      {filteredProducts.length === products.length ? 'All Products' : 'Filtered Results'}
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      Showing <strong>{filteredProducts.length}</strong> of <strong>{products.length}</strong> products
+                    </p>
                   </div>
+                  <button
+                    onClick={refetch}
+                    className="bg-gray-900 text-white px-6 py-3 font-light hover:bg-gray-800 transition-colors inline-flex items-center space-x-2"
+                  >
+                    <RefreshCw className="h-5 w-5" />
+                    <span>Refresh</span>
+                  </button>
                 </div>
-                
-                <button
-                  onClick={refetch}
-                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 shadow-lg transform hover:scale-105 transition-all font-bold"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                  <span>Refresh</span>
-                </button>
-              </div>
-            </div>
 
-            {filteredProducts.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-xl p-16 text-center border border-gray-100">
-                <div className="bg-gradient-to-br from-gray-100 to-blue-100 rounded-full w-32 h-32 flex items-center justify-center mx-auto mb-8 shadow-lg">
-                  <AlertCircle className="h-16 w-16 text-gray-400" />
-                </div>
-                <h3 className="text-3xl font-extrabold text-gray-900 mb-4">No Matches Found</h3>
-                <p className="text-gray-600 mb-8 text-lg max-w-md mx-auto">
-                  We couldn't find any products matching your current filters. Try adjusting your criteria.
-                </p>
-                <button
-                  onClick={() => setFilters({
-                    category: '',
-                    brand: '',
-                    minPrice: 0,
-                    maxPrice: 1000000,
-                    sortBy: 'name'
-                  })}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 font-bold shadow-lg transform hover:scale-105 transition-all inline-flex items-center space-x-2"
-                >
-                  <RefreshCw className="h-5 w-5" />
-                  <span>Clear All Filters</span>
-                </button>
-              </div>
-            ) : (
-              <ProductGrid products={filteredProducts} />
-            )}
+                {/* Grid or Empty State */}
+                {filteredProducts.length === 0 ? (
+                  <div className="bg-white p-16 rounded-xl text-center shadow-sm">
+                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <Package className="h-10 w-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-2xl font-light text-gray-900 mb-2">No Products Found</h3>
+                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                      We couldn't find any products matching your criteria. Try adjusting your filters.
+                    </p>
+                    <button
+                      onClick={() => setFilters({
+                        category: '', brand: '', minPrice: 0, maxPrice: 1000000, sortBy: 'name'
+                      })}
+                      className="bg-gray-900 text-white px-6 py-3 font-light hover:bg-gray-800 transition-colors inline-flex items-center space-x-2"
+                    >
+                      <RefreshCw className="h-5 w-5" />
+                      <span>Clear Filters</span>
+                    </button>
+                  </div>
+                ) : (
+                  <ProductGrid products={filteredProducts} />
+                )}
+              </main>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

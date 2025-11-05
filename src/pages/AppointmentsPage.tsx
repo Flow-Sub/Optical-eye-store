@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Phone, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Phone, CheckCircle, ChevronRight, Sparkles } from 'lucide-react';
 
 export function AppointmentsPage() {
   const services = [
@@ -8,25 +8,25 @@ export function AppointmentsPage() {
       name: 'Comprehensive Eye Exam',
       duration: '45 minutes',
       price: '$120',
-      description: 'Complete eye health examination including vision testing, glaucoma screening, and retinal evaluation.'
+      description: 'Complete eye health examination including vision testing and retinal evaluation.'
     },
     {
       id: 'frame-selection',
       name: 'Frame Selection & Styling',
       duration: '30 minutes',
-      price: 'Free',
-      description: 'Personalized frame selection with our styling experts to find the perfect frames for your face shape and lifestyle.'
+      price: 'Complimentary',
+      description: 'Personalized frame selection with our expert stylists.'
     },
     {
       id: 'contact-fitting',
       name: 'Contact Lens Fitting',
       duration: '60 minutes',
       price: '$95',
-      description: 'Professional contact lens fitting with training on proper insertion, removal, and care.'
+      description: 'Professional fitting with training on proper care and handling.'
     }
   ];
 
-  // ✅ Load Calendly script
+  // Load Calendly script
   React.useEffect(() => {
     const script = document.createElement('script');
     script.src = 'https://assets.calendly.com/assets/external/widget.js';
@@ -34,7 +34,6 @@ export function AppointmentsPage() {
     document.body.appendChild(script);
 
     return () => {
-      // Cleanup script on unmount
       const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
       if (existingScript) {
         document.body.removeChild(existingScript);
@@ -42,116 +41,178 @@ export function AppointmentsPage() {
     };
   }, []);
 
-  // ✅ Real Calendly Embed Component
   const CalendlyEmbed = () => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-      <div className="text-center mb-6">
-        <Calendar className="h-16 w-16 text-blue-600 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">Schedule Your Appointment</h3>
-        <p className="text-gray-600">
-          Select your preferred date and time from our available slots below.
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+      <div className="text-center mb-8">
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Calendar className="h-8 w-8 text-gray-700" />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">Schedule Your Visit</h3>
+        <p className="text-gray-600 font-light text-sm">
+          Select your preferred date and time below
         </p>
       </div>
-      
-      {/* Real Calendly Widget */}
+
+      {/* Calendly Widget */}
       <div 
-        className="calendly-inline-widget" 
+        className="calendly-inline-widget rounded-lg overflow-hidden"
         data-url="https://calendly.com/eyeoptical007/30min?hide_event_type_details=1&hide_gdpr_banner=1"
-        style={{ minWidth: '320px', height: '700px' }}
+        style={{ minWidth: '320px', height: '630px' }}
       />
-      
-      <div className="mt-6 text-sm text-gray-600 text-center">
-        <p>
-          Having trouble? Call us at <strong className="text-blue-600">(555) 123-4567</strong>
+
+      <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+        <p className="text-sm text-gray-600 font-light">
+          Need assistance? Call us at{' '}
+          <a href="tel:5551234567" className="text-gray-900 font-medium hover:text-gray-700">
+            (555) 123-4567
+          </a>
         </p>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Book Your Appointment</h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Schedule professional eye care services with our experienced optometrists and eye care specialists.
-          </p>
+    <div className="min-h-screen bg-white pt-28">
+      
+      {/* HERO */}
+      <section className="relative bg-gradient-to-b from-gray-50 to-white py-20">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gray-100 rounded-full blur-3xl opacity-30"></div>
         </div>
+        
+        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center justify-center space-x-2 text-xs uppercase tracking-wider text-gray-500 mb-6">
+              <Sparkles className="h-4 w-4" />
+              <span>Book Online</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
+              Schedule Your Appointment
+            </h1>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Experience professional eye care with our team of expert optometrists. 
+              Book your consultation today.
+            </p>
+          </div>
+        </div>
+      </section>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Services */}
-          <div className="space-y-6">
-            <h2 className="text-2xl font-semibold text-gray-900">Our Services</h2>
+      {/* MAIN CONTENT */}
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
             
-            {services.map((service) => (
-              <div
-                key={service.id}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-gray-900">{service.name}</h3>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-blue-600">{service.price}</div>
-                    <div className="text-sm text-gray-600 flex items-center">
-                      <Clock className="h-4 w-4 mr-1" />
-                      {service.duration}
+            {/* LEFT COLUMN */}
+            <div className="space-y-8">
+              
+              {/* Services */}
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900 mb-6">Available Services</h2>
+                <div className="space-y-4">
+                  {services.map((service) => (
+                    <div
+                      key={service.id}
+                      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-sm transition-all duration-200"
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-medium text-lg text-gray-900">{service.name}</h3>
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900">{service.price}</div>
+                          <div className="text-xs text-gray-500 flex items-center justify-end mt-1">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {service.duration}
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-sm text-gray-600 font-light leading-relaxed">
+                        {service.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact Info */}
+              <div className="bg-gray-50 rounded-xl p-6">
+                <h3 className="font-semibold text-lg text-gray-900 mb-4">Visit Our Store</h3>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
+                    <div className="text-sm text-gray-700 font-light">
+                      123 Vision Street<br />
+                      City, State 12345
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Phone className="h-4 w-4 text-gray-400" />
+                    <span className="text-sm text-gray-700 font-light">(555) 123-4567</span>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <Clock className="h-4 w-4 text-gray-400 mt-0.5" />
+                    <div className="text-sm text-gray-700 font-light">
+                      Mon-Fri: 9:00 AM - 7:00 PM<br />
+                      Sat: 9:00 AM - 6:00 PM<br />
+                      Sun: 11:00 AM - 5:00 PM
                     </div>
                   </div>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">{service.description}</p>
               </div>
-            ))}
 
-            {/* Contact Info */}
-            <div className="bg-blue-50 rounded-lg p-6 mt-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Phone className="h-5 w-5 text-blue-600" />
-                  <span className="text-gray-700">(555) 123-4567</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <MapPin className="h-5 w-5 text-blue-600" />
-                  <span className="text-gray-700">123 Vision Street, City, State 12345</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                  <div className="text-gray-700 text-sm">
-                    <div>Mon-Fri: 9:00 AM - 7:00 PM</div>
-                    <div>Sat: 9:00 AM - 6:00 PM</div>
-                    <div>Sun: 11:00 AM - 5:00 PM</div>
-                  </div>
+              {/* What to Expect */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <h3 className="font-semibold text-lg text-gray-900 mb-4">What to Expect</h3>
+                <div className="space-y-3">
+                  {[
+                    'Arrive 15 minutes early for paperwork',
+                    'Bring current glasses and insurance card',
+                    'Complete health history forms',
+                    'Receive comprehensive examination',
+                    'Discuss results and recommendations'
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-start space-x-3">
+                      <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
+                      <span className="text-sm text-gray-700 font-light">{item}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* What to Expect */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">What to Expect</h3>
-              <div className="space-y-3">
-                {[
-                  'Arrive 15 minutes early for check-in',
-                  'Bring your current glasses and insurance card',
-                  'Complete health history forms',
-                  'Receive comprehensive eye examination',
-                  'Discuss results and recommendations'
-                ].map((item, index) => (
-                  <div key={index} className="flex items-start space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-                    <span className="text-gray-700 text-sm">{item}</span>
-                  </div>
-                ))}
-              </div>
+            {/* RIGHT COLUMN - Booking Widget */}
+            <div className="lg:sticky lg:top-28">
+              <CalendlyEmbed />
             </div>
-          </div>
-
-          {/* Booking Widget */}
-          <div className="lg:sticky lg:top-8">
-            <CalendlyEmbed />
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* CTA SECTION */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-4">
+            Have Questions?
+          </h2>
+          <p className="text-gray-600 mb-8 font-light">
+            Our team is here to help you with any inquiries about our services
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+              href="tel:5551234567"
+              className="border border-gray-900 text-gray-900 px-8 py-3 font-light hover:bg-gray-900 hover:text-white transition-all duration-300 inline-flex items-center justify-center space-x-2"
+            >
+              <Phone className="h-4 w-4" />
+              <span>Call Us</span>
+            </a>
+            <a
+              href="/contact"
+              className="bg-gray-900 text-white px-8 py-3 font-light hover:bg-gray-800 transition-all duration-300 inline-flex items-center justify-center space-x-2 group"
+            >
+              <span>Contact Form</span>
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </a>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

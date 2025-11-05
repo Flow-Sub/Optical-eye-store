@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Eye, Clock, Users, Award, CheckCircle, Calendar, Phone, MapPin, Navigation } from 'lucide-react';
+import { Eye, Clock, Users, Award, CheckCircle, Calendar, Phone, MapPin, ChevronRight, Sparkles, Shield } from 'lucide-react';
 import { createAppointment } from '../services/airtable';
 
 interface StoreLocation {
@@ -31,7 +31,7 @@ declare global {
 const storeLocations: StoreLocation[] = [
   {
     id: 'manhattan',
-    name: 'Manhattan Flagship Store',
+    name: 'Manhattan Flagship',
     address: '123 Fifth Avenue, New York, NY 10001',
     phone: '(212) 555-0101',
     hours: 'Mon-Sat: 9AM-8PM, Sun: 10AM-6PM',
@@ -94,6 +94,7 @@ export function ServicesPage() {
     return () => {
       const existingLink = document.querySelector('link[href="https://assets.calendly.com/assets/external/widget.css"]');
       if (existingLink) document.head.removeChild(existingLink);
+      
       const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
       if (existingScript) document.body.removeChild(existingScript);
     };
@@ -116,7 +117,7 @@ export function ServicesPage() {
 
   const openCalendly = () => {
     if (!selectedLocation) return;
-
+    
     if (window.Calendly) {
       window.Calendly.initPopupWidget({
         url: selectedLocation.calendlyUrl
@@ -140,8 +141,8 @@ export function ServicesPage() {
         customerPhone: bookingData.phone,
         storeLocation: selectedLocation.name,
         serviceType: selectedService,
-        appointmentDate: new Date().toISOString().split('T')[0], // Will be updated by Calendly webhook
-        appointmentTime: 'TBD', // Will be updated by Calendly webhook
+        appointmentDate: new Date().toISOString().split('T')[0],
+        appointmentTime: 'TBD',
         status: 'Scheduled',
         notes: bookingData.notes
       });
@@ -154,9 +155,9 @@ export function ServicesPage() {
     {
       id: 'comprehensive-exam',
       title: 'Comprehensive Eye Examinations',
-      duration: '45-60 minutes',
-      price: 'From $120',
-      description: 'Complete eye health evaluation including vision testing, glaucoma screening, and retinal examination.',
+      duration: '45-60 min',
+      price: '$120',
+      description: 'Complete eye health evaluation with advanced diagnostic technology.',
       features: [
         'Visual acuity testing',
         'Refraction assessment',
@@ -170,9 +171,9 @@ export function ServicesPage() {
     {
       id: 'contact-lens',
       title: 'Contact Lens Services',
-      duration: '30-45 minutes',
-      price: 'From $95',
-      description: 'Professional contact lens fitting, training, and ongoing care for optimal comfort and vision.',
+      duration: '30-45 min',
+      price: '$95',
+      description: 'Professional fitting and training for optimal comfort and vision.',
       features: [
         'Initial fitting consultation',
         'Lens insertion/removal training',
@@ -186,9 +187,9 @@ export function ServicesPage() {
     {
       id: 'frame-styling',
       title: 'Frame Selection & Styling',
-      duration: '30 minutes',
+      duration: '30 min',
       price: 'Complimentary',
-      description: 'Personalized frame selection with our styling experts to find the perfect frames for your lifestyle.',
+      description: 'Personalized frame selection with our expert stylists.',
       features: [
         'Face shape analysis',
         'Lifestyle consultation',
@@ -198,133 +199,81 @@ export function ServicesPage() {
         'Virtual try-on technology'
       ],
       image: 'https://images.pexels.com/photos/1187999/pexels-photo-1187999.jpeg?auto=compress&cs=tinysrgb&w=600'
-    },
-    {
-      id: 'lens-services',
-      title: 'Lens Services & Coatings',
-      duration: '15-30 minutes',
-      price: 'Varies',
-      description: 'Premium lens options and protective coatings to enhance your vision and protect your investment.',
-      features: [
-        'Progressive lenses',
-        'Anti-reflective coating',
-        'Blue light protection',
-        'Photochromic lenses',
-        'High-index materials',
-        'Scratch-resistant coating'
-      ],
-      image: 'https://images.pexels.com/photos/6087368/pexels-photo-6087368.jpeg?auto=compress&cs=tinysrgb&w=600'
-    },
-    {
-      id: 'repairs',
-      title: 'Repairs & Adjustments',
-      duration: '15-30 minutes',
-      price: 'From $15',
-      description: 'Professional repair services and adjustments to keep your eyewear in perfect condition.',
-      features: [
-        'Frame adjustments',
-        'Nose pad replacement',
-        'Screw tightening',
-        'Temple repair',
-        'Lens replacement',
-        'Emergency repairs'
-      ],
-      image: 'https://images.pexels.com/photos/6087246/pexels-photo-6087246.jpeg?auto=compress&cs=tinysrgb&w=600'
-    },
-    {
-      id: 'pediatric',
-      title: 'Pediatric Eye Care',
-      duration: '30-45 minutes',
-      price: 'From $110',
-      description: 'Specialized eye care for children with gentle, age-appropriate examination techniques.',
-      features: [
-        'Child-friendly environment',
-        'Vision development assessment',
-        'Learning-related vision problems',
-        'Amblyopia screening',
-        'Strabismus evaluation',
-        'Sports vision assessment'
-      ],
-      image: 'https://images.pexels.com/photos/8460157/pexels-photo-8460157.jpeg?auto=compress&cs=tinysrgb&w=600'
     }
   ];
 
   const whyChooseUs = [
-    {
-      icon: Award,
-      title: 'Expert Optometrists',
-      description: 'Licensed professionals with years of experience in comprehensive eye care.'
-    },
-    {
-      icon: Eye,
-      title: 'Advanced Technology',
-      description: 'State-of-the-art equipment for accurate diagnosis and treatment.'
-    },
-    {
-      icon: Users,
-      title: 'Personalized Care',
-      description: 'Individual attention and customized solutions for your unique needs.'
-    },
-    {
-      icon: Clock,
-      title: 'Convenient Hours',
-      description: 'Flexible scheduling including evenings and weekends.'
-    }
+    { icon: Award, title: 'Expert Optometrists', description: 'Licensed professionals with years of experience.' },
+    { icon: Eye, title: 'Advanced Technology', description: 'State-of-the-art diagnostic equipment.' },
+    { icon: Users, title: 'Personalized Care', description: 'Tailored solutions for your unique needs.' },
+    { icon: Shield, title: 'Quality Guarantee', description: 'Satisfaction guaranteed on all services.' }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-5xl font-bold mb-6">Professional Eye Care Services</h1>
-            <p className="text-xl text-blue-100 max-w-3xl mx-auto mb-8">
-              Comprehensive eye examinations, expert fittings, and personalized care from our experienced team of optometrists and eye care specialists.
+    <div className="min-h-screen bg-white pt-28">
+      
+      {/* HERO SECTION */}
+      <section className="relative bg-gradient-to-b from-gray-50 to-white py-20">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-96 h-96 bg-gray-100 rounded-full blur-3xl opacity-50"></div>
+          <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-gray-100 rounded-full blur-3xl opacity-50"></div>
+        </div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto">
+            <div className="inline-flex items-center justify-center space-x-2 text-xs uppercase tracking-wider text-gray-500 mb-6">
+              <Sparkles className="h-4 w-4" />
+              <span>Professional Eye Care</span>
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 mb-6">
+              Expert Vision Care Services
+            </h1>
+            <p className="text-lg text-gray-600 mb-10 leading-relaxed">
+              Comprehensive eye examinations and personalized care from our experienced team of optometrists.
             </p>
             <button
               onClick={openBookingFlow}
-              className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors inline-flex items-center space-x-2"
+              className="bg-gray-900 text-white px-8 py-4 font-light hover:bg-gray-800 transition-all duration-300 inline-flex items-center space-x-3 group"
             >
               <Calendar className="h-5 w-5" />
-              <span>Book Appointment</span>
+              <span>Schedule Appointment</span>
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
         </div>
       </section>
 
-      {/* Store Locations */}
+      {/* LOCATIONS */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Locations</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Visit us at any of our convenient locations across New York
-            </p>
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Visit Our Locations</h2>
+            <p className="text-gray-600">Four convenient locations across New York</p>
           </div>
-
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {storeLocations.map((location) => (
-              <div key={location.id} className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-shadow overflow-hidden border border-gray-200">
-                <img
-                  src={location.image}
-                  alt={location.name}
-                  className="w-full h-48 object-cover"
-                />
+              <div
+                key={location.id}
+                className="group bg-white rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300"
+              >
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src={location.image}
+                    alt={location.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                </div>
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">{location.name}</h3>
-                  <div className="space-y-2 text-sm text-gray-600 mb-4">
+                  <h3 className="font-light text-lg text-gray-900 mb-3">{location.name}</h3>
+                  <div className="space-y-2 text-sm text-gray-600 mb-5">
                     <div className="flex items-start space-x-2">
-                      <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>{location.address}</span>
+                      <MapPin className="h-4 w-4 mt-0.5 text-gray-400" />
+                      <span className="font-light">{location.address}</span>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Phone className="h-4 w-4 flex-shrink-0" />
-                      <span>{location.phone}</span>
-                    </div>
-                    <div className="flex items-start space-x-2">
-                      <Clock className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                      <span>{location.hours}</span>
+                      <Clock className="h-4 w-4 text-gray-400" />
+                      <span className="font-light text-xs">{location.hours}</span>
                     </div>
                   </div>
                   <button
@@ -332,10 +281,9 @@ export function ServicesPage() {
                       setSelectedLocation(location);
                       openBookingFlow();
                     }}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    className="w-full border border-gray-900 text-gray-900 py-2.5 font-light text-sm hover:bg-gray-900 hover:text-white transition-all duration-300"
                   >
-                    <Calendar className="h-4 w-4" />
-                    <span>Book Here</span>
+                    Book Here
                   </button>
                 </div>
               </div>
@@ -344,52 +292,49 @@ export function ServicesPage() {
         </div>
       </section>
 
-      {/* Services Grid */}
-      <section className="py-20">
+      {/* SERVICES */}
+      <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Our Services</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              From routine eye exams to specialized treatments, we provide comprehensive care for all your vision needs.
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Our Services</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Professional eye care services tailored to your needs
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service) => (
-              <div key={service.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-                <div className="md:flex">
-                  <div className="md:w-1/3">
-                    <img
-                      src={service.image}
-                      alt={service.title}
-                      className="w-full h-48 md:h-full object-cover"
-                    />
+              <div
+                key={service.id}
+                className="bg-white rounded-xl overflow-hidden hover:shadow-md transition-shadow duration-300"
+              >
+                <div className="aspect-[16/9] overflow-hidden">
+                  <img
+                    src={service.image}
+                    alt={service.title}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-light text-lg text-gray-900">{service.title}</h3>
                   </div>
-                  <div className="md:w-2/3 p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <h3 className="text-xl font-semibold text-gray-900">{service.title}</h3>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-blue-600">{service.price}</div>
-                        <div className="text-sm text-gray-600 flex items-center">
-                          <Clock className="h-4 w-4 mr-1" />
-                          {service.duration}
-                        </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                    <span className="font-medium text-gray-900">{service.price}</span>
+                    <span className="text-gray-400">•</span>
+                    <span className="flex items-center">
+                      <Clock className="h-3.5 w-3.5 mr-1" />
+                      {service.duration}
+                    </span>
+                  </div>
+                  <p className="text-gray-600 text-sm mb-4 leading-relaxed">{service.description}</p>
+                  <div className="space-y-2">
+                    {service.features.slice(0, 3).map((feature, idx) => (
+                      <div key={idx} className="flex items-center text-xs text-gray-700">
+                        <CheckCircle className="h-3.5 w-3.5 text-green-500 mr-2" />
+                        {feature}
                       </div>
-                    </div>
-                    <p className="text-gray-600 mb-4">{service.description}</p>
-                    <div className="space-y-2">
-                      {service.features.slice(0, 3).map((feature, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-700">
-                          <CheckCircle className="h-4 w-4 text-green-500 mr-2 flex-shrink-0" />
-                          {feature}
-                        </div>
-                      ))}
-                      {service.features.length > 3 && (
-                        <div className="text-sm text-gray-500">
-                          +{service.features.length - 3} more services included
-                        </div>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -398,86 +343,81 @@ export function ServicesPage() {
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* WHY CHOOSE US */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Why Choose OpticalStore?</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              We're committed to providing exceptional eye care with the latest technology and personalized service.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-4 gap-8">
             {whyChooseUs.map((item, index) => (
               <div key={index} className="text-center">
-                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
-                  <item.icon className="h-8 w-8 text-blue-600" />
+                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <item.icon className="h-6 w-6 text-gray-700" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">{item.title}</h3>
-                <p className="text-gray-600">{item.description}</p>
+                <h3 className="font-light text-gray-900 mb-2">{item.title}</h3>
+                <p className="text-sm text-gray-600 font-light">{item.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Booking Modal */}
+      {/* BOOKING MODAL */}
       {showBookingModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+            <div className="bg-gradient-to-r from-gray-900 to-black p-6 text-white">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold">Book Your Appointment</h2>
-                <button onClick={() => setShowBookingModal(false)} className="text-white hover:bg-white/20 p-2 rounded-full">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <h2 className="text-xl font-light">Book Your Appointment</h2>
+                <button
+                  onClick={() => setShowBookingModal(false)}
+                  className="text-white/80 hover:text-white p-2"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-              <div className="flex items-center space-x-4 mt-4">
-                <div className={`flex items-center ${bookingStep === 'location' ? 'text-white' : 'text-blue-200'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'location' ? 'bg-white text-blue-600' : 'bg-blue-500'}`}>1</div>
-                  <span className="ml-2">Location</span>
-                </div>
-                <div className="flex-1 h-0.5 bg-blue-400"></div>
-                <div className={`flex items-center ${bookingStep === 'service' ? 'text-white' : 'text-blue-200'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'service' ? 'bg-white text-blue-600' : 'bg-blue-500'}`}>2</div>
-                  <span className="ml-2">Service</span>
-                </div>
-                <div className="flex-1 h-0.5 bg-blue-400"></div>
-                <div className={`flex items-center ${bookingStep === 'calendly' ? 'text-white' : 'text-blue-200'}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'calendly' ? 'bg-white text-blue-600' : 'bg-blue-500'}`}>3</div>
-                  <span className="ml-2">Schedule</span>
-                </div>
+              
+              {/* Progress Steps */}
+              <div className="flex items-center justify-between mt-6">
+                {['Location', 'Service', 'Schedule'].map((step, idx) => (
+                  <div key={idx} className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-light
+                      ${idx === ['location', 'service', 'calendly'].indexOf(bookingStep) 
+                        ? 'bg-white text-gray-900' 
+                        : 'bg-white/20 text-white/60'}`}>
+                      {idx + 1}
+                    </div>
+                    <span className="ml-2 text-sm font-light hidden sm:inline">{step}</span>
+                    {idx < 2 && <div className="w-12 sm:w-20 h-px bg-white/20 ml-4" />}
+                  </div>
+                ))}
               </div>
             </div>
 
             <div className="p-8">
-              {/* Step 1: Select Location */}
+              {/* Location Step */}
               {bookingStep === 'location' && (
-                <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Preferred Location</h3>
+                <div className="animate-fadeIn">
+                  <h3 className="text-2xl font-light text-gray-900 mb-6">Choose Your Location</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {storeLocations.map((location) => (
                       <div
                         key={location.id}
                         onClick={() => handleLocationSelect(location)}
-                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg ${
-                          selectedLocation?.id === location.id
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300'
-                        }`}
+                        className={`border rounded-lg p-5 cursor-pointer transition-all duration-200 hover:shadow-md
+                          ${selectedLocation?.id === location.id
+                            ? 'border-gray-900 bg-gray-50'
+                            : 'border-gray-200 hover:border-gray-400'}`}
                       >
-                        <h4 className="font-semibold text-gray-900 mb-2">{location.name}</h4>
+                        <h4 className="font-light text-gray-900 mb-2">{location.name}</h4>
                         <div className="space-y-1 text-sm text-gray-600">
                           <div className="flex items-start space-x-2">
-                            <MapPin className="h-4 w-4 mt-0.5" />
-                            <span>{location.address}</span>
+                            <MapPin className="h-3.5 w-3.5 mt-0.5" />
+                            <span className="font-light text-xs">{location.address}</span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Phone className="h-4 w-4" />
-                            <span>{location.phone}</span>
+                            <Phone className="h-3.5 w-3.5" />
+                            <span className="font-light text-xs">{location.phone}</span>
                           </div>
                         </div>
                       </div>
@@ -486,110 +426,116 @@ export function ServicesPage() {
                 </div>
               )}
 
-              {/* Step 2: Select Service */}
+              {/* Service Step */}
               {bookingStep === 'service' && (
-                <div>
+                <div className="animate-fadeIn">
                   <button
                     onClick={() => setBookingStep('location')}
-                    className="text-blue-600 hover:text-blue-700 mb-4 flex items-center"
+                    className="text-gray-600 hover:text-gray-900 mb-4 text-sm font-light flex items-center"
                   >
                     ← Back to locations
                   </button>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Select Service Type</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <h3 className="text-2xl font-light text-gray-900 mb-6">Select Service Type</h3>
+                  <div className="space-y-4">
                     {services.map((service) => (
                       <div
                         key={service.id}
                         onClick={() => handleServiceSelect(service.title)}
-                        className={`border-2 rounded-xl p-4 cursor-pointer transition-all hover:shadow-lg ${
-                          selectedService === service.title
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-200 hover:border-blue-300'
-                        }`}
+                        className={`border rounded-lg p-5 cursor-pointer transition-all duration-200 hover:shadow-md
+                          ${selectedService === service.title
+                            ? 'border-gray-900 bg-gray-50'
+                            : 'border-gray-200 hover:border-gray-400'}`}
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-semibold text-gray-900">{service.title}</h4>
-                          <span className="text-blue-600 font-bold">{service.price}</span>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-light text-gray-900 mb-1">{service.title}</h4>
+                            <p className="text-sm text-gray-600 font-light">{service.description}</p>
+                          </div>
+                          <div className="text-right ml-4">
+                            <div className="font-light text-gray-900">{service.price}</div>
+                            <div className="text-xs text-gray-500">{service.duration}</div>
+                          </div>
                         </div>
-                        <p className="text-sm text-gray-600">{service.description}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Step 3: Enter Details & Schedule */}
+              {/* Schedule Step */}
               {bookingStep === 'calendly' && (
-                <div>
+                <div className="animate-fadeIn">
                   <button
                     onClick={() => setBookingStep('service')}
-                    className="text-blue-600 hover:text-blue-700 mb-4 flex items-center"
+                    className="text-gray-600 hover:text-gray-900 mb-4 text-sm font-light flex items-center"
                   >
                     ← Back to services
                   </button>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-6">Your Information</h3>
+                  <h3 className="text-2xl font-light text-gray-900 mb-6">Your Information</h3>
                   
-                  <div className="bg-blue-50 rounded-lg p-4 mb-6">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                    <div className="flex items-center justify-between text-sm">
                       <div>
-                        <p className="text-sm text-gray-600">Location</p>
-                        <p className="font-semibold">{selectedLocation?.name}</p>
+                        <p className="text-gray-600 font-light">Location</p>
+                        <p className="text-gray-900">{selectedLocation?.name}</p>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Service</p>
-                        <p className="font-semibold">{selectedService}</p>
+                      <div className="text-right">
+                        <p className="text-gray-600 font-light">Service</p>
+                        <p className="text-gray-900">{selectedService}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                      <label className="block text-sm font-light text-gray-700 mb-2">Full Name *</label>
                       <input
                         type="text"
                         value={bookingData.name}
                         onChange={(e) => setBookingData({ ...bookingData, name: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                         placeholder="John Doe"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Email Address *</label>
+                      <label className="block text-sm font-light text-gray-700 mb-2">Email Address *</label>
                       <input
                         type="email"
                         value={bookingData.email}
                         onChange={(e) => setBookingData({ ...bookingData, email: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                         placeholder="john@example.com"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                      <label className="block text-sm font-light text-gray-700 mb-2">Phone Number</label>
                       <input
                         type="tel"
                         value={bookingData.phone}
                         onChange={(e) => setBookingData({ ...bookingData, phone: e.target.value })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                         placeholder="(555) 123-4567"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                      <label className="block text-sm font-light text-gray-700 mb-2">Additional Notes</label>
                       <textarea
                         value={bookingData.notes}
                         onChange={(e) => setBookingData({ ...bookingData, notes: e.target.value })}
                         rows={3}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Any special requirements or questions..."
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
+                        placeholder="Any special requirements..."
                       />
                     </div>
-
+                    
                     <button
                       onClick={handleBookingSubmit}
                       disabled={!bookingData.name || !bookingData.email}
-                      className="w-full bg-blue-600 text-white py-4 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
+                      className="w-full bg-gray-900 text-white py-4 px-6 font-light hover:bg-gray-800 
+                               disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors 
+                               flex items-center justify-center space-x-2"
                     >
-                      <Calendar className="h-5 w-5" />
+                      <Calendar className="h-4 w-4" />
                       <span>Continue to Schedule</span>
                     </button>
                   </div>

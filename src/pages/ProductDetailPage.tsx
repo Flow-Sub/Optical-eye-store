@@ -1,6 +1,11 @@
+/* src/pages/ProductDetailPage.tsx */
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, ChevronLeft, ChevronRight, AlertCircle, ArrowLeft, Share2, Check, Zap } from 'lucide-react';
+import {
+  Star, Heart, ShoppingCart, Truck, Shield, RotateCcw,
+  ChevronLeft, ChevronRight, AlertCircle, ArrowLeft,
+  Share2, Check, Zap
+} from 'lucide-react';
 import { fetchProductById } from '../services/airtable';
 import { useCart } from '../contexts/CartContext';
 import { LensSelector } from '../components/LensSelector/LensSelector';
@@ -13,56 +18,73 @@ export function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addToCart } = useCart();
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLensSelectorOpen, setIsLensSelectorOpen] = useState(false);
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
+  /* ────────────────────── FETCH PRODUCT ────────────────────── */
   useEffect(() => {
-    const loadProduct = async () => {
+    const load = async () => {
       if (!id) return;
-      
       try {
         setLoading(true);
         const data = await fetchProductById(id);
         setProduct(data);
-      } catch (err) {
+      } catch (e) {
         setError('Failed to load product');
       } finally {
         setLoading(false);
       }
     };
-
-    loadProduct();
+    load();
   }, [id]);
 
+  /* ────────────────────── HANDLERS ────────────────────── */
+  const handleAddToCart = (lens?: LensOption, coatings?: LensCoating[], prescription?: PrescriptionData) => {
+    addToCart(product!, 1, lens, coatings, prescription);
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 3000);
+  };
+
+  const directAdd = () => {
+    if (product!.lensCompatible) {
+      setIsLensSelectorOpen(true);
+    } else {
+      handleAddToCart(); // Now this works
+    }
+  };
+
+  const nextImg = () => setSelectedImageIndex(i => (i + 1) % product!.images.length);
+  const prevImg = () => setSelectedImageIndex(i => (i - 1 + product!.images.length) % product!.images.length);
+
+  /* ────────────────────── LOADING ────────────────────── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
         <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-20 w-20 border-b-4 border-blue-600 mx-auto mb-6"></div>
-            <ShoppingCart className="h-8 w-8 text-blue-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
-          </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Loading Product</h3>
-          <p className="text-gray-600">Please wait...</p>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mb-6"></div>
+          <h3 className="text-2xl font-light text-gray-900">Loading Product</h3>
+          <p className="text-gray-600 mt-2">Please wait…</p>
         </div>
       </div>
     );
   }
 
+  /* ────────────────────── ERROR / NOT FOUND ────────────────────── */
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center">
-        <div className="text-center max-w-md bg-white rounded-2xl shadow-xl p-8">
-          <div className="bg-red-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-white flex items-center justify-center p-6">
+        <div className="max-w-lg w-full text-center">
+          <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="h-10 w-10 text-red-600" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Product Not Found</h1>
-          <p className="text-gray-600 mb-6">{error || "The product you're looking for doesn't exist."}</p>
+          <h2 className="text-3xl font-light text-gray-900 mb-4">Product Not Found</h2>
+          <p className="text-gray-600 mb-6">{error || "We couldn't locate this item."}</p>
           <button
             onClick={() => navigate('/products')}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 inline-flex items-center space-x-2 shadow-lg transform hover:scale-105 transition-all"
+            className="bg-gray-900 text-white px-8 py-3.5 font-light hover:bg-gray-800 transition-colors inline-flex items-center space-x-2"
           >
             <ArrowLeft className="h-5 w-5" />
             <span>Back to Products</span>
@@ -72,46 +94,24 @@ export function ProductDetailPage() {
     );
   }
 
-  const handleAddToCart = (lensOption?: LensOption, coatings?: LensCoating[], prescription?: PrescriptionData) => {
-    addToCart(product, 1, lensOption, coatings, prescription);
-    setShowSuccessMessage(true);
-    setTimeout(() => setShowSuccessMessage(false), 3000);
-  };
-
-  const handleDirectAdd = () => {
-    if (product.lensCompatible) {
-      setIsLensSelectorOpen(true);
-    } else {
-      addToCart(product);
-      setShowSuccessMessage(true);
-      setTimeout(() => setShowSuccessMessage(false), 3000);
-    }
-  };
-
-  const nextImage = () => {
-    setSelectedImageIndex((prev) => (prev + 1) % product.images.length);
-  };
-
-  const prevImage = () => {
-    setSelectedImageIndex((prev) => (prev - 1 + product.images.length) % product.images.length);
-  };
-
+  /* ────────────────────── MAIN UI ────────────────────── */
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-      {/* Success Message */}
-      {showSuccessMessage && (
-        <div className="fixed top-24 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-2xl flex items-center space-x-3 animate-slide-in">
-          <Check className="h-6 w-6" />
-          <span className="font-semibold">Added to cart successfully!</span>
+    <div className="min-h-screen bg-white">
+
+      {/* ───── SUCCESS TOAST ───── */}
+      {showSuccess && (
+        <div className="fixed top-24 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 animate-fade-in">
+          <Check className="h-5 w-5" />
+          <span className="font-medium">Added to cart!</span>
         </div>
       )}
 
-      {/* Breadcrumb & Back Button */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* ───── BREADCRUMB ───── */}
+      <div className="border-b border-gray-200">
+        <div className="max-w-full px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => navigate('/products')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors"
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
             <span className="font-medium">Back to Products</span>
@@ -119,215 +119,224 @@ export function ProductDetailPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+      {/* ───── FULL‑WIDTH CONTENT ───── */}
+      <div className="max-w-full px-4 sm:px-6 lg:px-8 py-12">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+
+          {/* ── GRID – IMAGES + INFO ── */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 p-8 lg:p-12">
-            {/* Product Images */}
+
+            {/* ── IMAGE SECTION ── */}
             <div className="space-y-6">
-              <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl overflow-hidden shadow-lg group">
+              {/* Main Image (full‑bleed on lg) */}
+              <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-sm group">
                 <img
                   src={product.images[selectedImageIndex]}
                   alt={product.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                {product.images.length > 1 && (
-                  <>
-                    <button
-                      onClick={prevImage}
-                      className="absolute left-4 top-1/2 transform -translate-y-1/2 p-3 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 shadow-lg transition-all hover:scale-110"
-                    >
-                      <ChevronLeft className="h-6 w-6 text-gray-800" />
-                    </button>
-                    <button
-                      onClick={nextImage}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-3 bg-white bg-opacity-90 rounded-full hover:bg-opacity-100 shadow-lg transition-all hover:scale-110"
-                    >
-                      <ChevronRight className="h-6 w-6 text-gray-800" />
-                    </button>
-                  </>
-                )}
+
+                {/* Stock Badges */}
                 {product.stock === 0 && (
-                  <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm">
-                    <span className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold text-lg shadow-lg">
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <span className="bg-red-600 text-white px-6 py-2 rounded-full font-bold text-lg">
                       Out of Stock
                     </span>
                   </div>
                 )}
                 {product.stock > 0 && product.stock < 10 && (
                   <div className="absolute top-4 left-4">
-                    <span className="bg-orange-500 text-white px-4 py-2 rounded-full font-semibold text-sm shadow-lg flex items-center space-x-1">
+                    <span className="bg-orange-500 text-white px-4 py-2 rounded-full font-semibold text-sm flex items-center space-x-1">
                       <Zap className="h-4 w-4" />
                       <span>Only {product.stock} left!</span>
                     </span>
                   </div>
                 )}
+
+                {/* Nav Arrows */}
+                {product.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={prevImg}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-2.5 bg-white rounded-full shadow-md hover:bg-gray-50 transition"
+                    >
+                      <ChevronLeft className="h-5 w-5 text-gray-800" />
+                    </button>
+                    <button
+                      onClick={nextImg}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-2.5 bg-white rounded-full shadow-md hover:bg-gray-50 transition"
+                    >
+                      <ChevronRight className="h-5 w-5 text-gray-800" />
+                    </button>
+                  </>
+                )}
               </div>
 
-              {/* Thumbnail Images */}
+              {/* Thumbnails */}
               {product.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-3">
-                  {product.images.map((image, index) => (
+                  {product.images.map((img, i) => (
                     <button
-                      key={index}
-                      onClick={() => setSelectedImageIndex(index)}
-                      className={`aspect-square rounded-xl overflow-hidden border-3 transition-all transform hover:scale-105 ${
-                        index === selectedImageIndex 
-                          ? 'border-blue-500 ring-2 ring-blue-200 shadow-lg' 
-                          : 'border-gray-300 hover:border-blue-300'
+                      key={i}
+                      onClick={() => setSelectedImageIndex(i)}
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                        i === selectedImageIndex
+                          ? 'border-gray-900 ring-2 ring-gray-300'
+                          : 'border-gray-300 hover:border-gray-500'
                       }`}
                     >
-                      <img
-                        src={image}
-                        alt={`${product.name} view ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      <img src={img} alt={`view ${i + 1}`} className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Product Info */}
+            {/* ── INFO SECTION ── */}
             <div className="space-y-8">
+
               {/* Header */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <span className="bg-blue-100 text-blue-700 text-sm font-semibold px-4 py-1 rounded-full capitalize">
+                  <span className="bg-gray-100 text-gray-700 text-sm font-medium px-4 py-1 rounded-full capitalize">
                     {product.category}
                   </span>
                   <button
                     onClick={() => setIsWishlisted(!isWishlisted)}
-                    className="p-3 rounded-full hover:bg-red-50 transition-colors group"
+                    className="p-2.5 rounded-full hover:bg-gray-100 transition"
                   >
-                    <Heart className={`h-6 w-6 ${isWishlisted ? 'fill-red-500 text-red-500' : 'text-gray-400 group-hover:text-red-500'} transition-colors`} />
+                    <Heart
+                      className={`h-6 w-6 ${
+                        isWishlisted ? 'fill-red-600 text-red-600' : 'text-gray-400'
+                      } transition-colors`}
+                    />
                   </button>
                 </div>
-                <h1 className="text-4xl font-extrabold text-gray-900 mb-2">{product.name}</h1>
+
+                <h1 className="text-4xl font-light text-gray-900 mb-2">{product.name}</h1>
                 <p className="text-xl text-gray-600 font-medium">{product.brand}</p>
-                
-                <div className="flex items-center mt-4 mb-6">
-                  <div className="flex items-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-5 w-5 ${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                      />
-                    ))}
-                  </div>
-                  <span className="text-sm text-gray-600 ml-3 font-medium">(24 reviews)</span>
+
+                {/* Rating */}
+                <div className="flex items-center mt-4">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${i < 4 ? 'text-amber-400 fill-current' : 'text-gray-300'}`}
+                    />
+                  ))}
+                  <span className="ml-2 text-sm text-gray-600">(24)</span>
                 </div>
 
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                  <div className="flex items-baseline space-x-3">
-                    <span className="text-5xl font-extrabold text-gray-900">
-                      ${product.price.toFixed(2)}
-                    </span>
-                    {product.lensCompatible && (
-                      <span className="text-gray-500 text-lg">+ lens options</span>
-                    )}
-                  </div>
+                {/* Price */}
+                <div className="mt-6">
+                  <span className="text-5xl font-light text-gray-900">
+                    ${product.price.toFixed(2)}
+                  </span>
+                  {product.lensCompatible && (
+                    <span className="ml-2 text-gray-500 text-lg">+ lens options</span>
+                  )}
                 </div>
               </div>
 
-              <div className="border-t border-gray-200 pt-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">Description</h3>
-                <p className="text-gray-700 leading-relaxed text-lg">{product.description || 'Premium quality eyewear crafted with precision.'}</p>
+              {/* Description */}
+              <div className="border-t border-gray-200 pt-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-3">Description</h3>
+                <p className="text-gray-700 leading-relaxed">
+                  {product.description || 'Premium quality eyewear crafted with precision.'}
+                </p>
               </div>
 
               {/* Features */}
               {product.features.length > 0 && (
-                <div className="border-t border-gray-200 pt-8">
-                  <h3 className="text-lg font-bold text-gray-900 mb-4">Key Features</h3>
+                <div className="border-t border-gray-200 pt-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Key Features</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    {product.features.map((feature, index) => (
+                    {product.features.map((f, i) => (
                       <div
-                        key={index}
-                        className="bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-800 text-sm font-medium px-4 py-3 rounded-xl border border-blue-100 flex items-center space-x-2"
+                        key={i}
+                        className="bg-gray-50 text-gray-800 text-sm font-medium px-4 py-3 rounded-lg border border-gray-200 flex items-center space-x-2"
                       >
-                        <Check className="h-4 w-4 text-blue-600" />
-                        <span>{feature}</span>
+                        <Check className="h-4 w-4 text-gray-600" />
+                        <span>{f}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Add to Cart */}
-              <div className="space-y-4 border-t border-gray-200 pt-8">
+              {/* CTA Buttons */}
+              <div className="space-y-4 border-t border-gray-200 pt-6">
                 <button
-                  onClick={handleDirectAdd}
+                  onClick={directAdd}
                   disabled={product.stock === 0}
-                  className={`w-full py-5 px-8 rounded-xl font-bold text-lg transition-all transform shadow-lg ${
+                  className={`w-full py-4 rounded-lg font-medium text-lg transition-all flex items-center justify-center space-x-2 ${
                     product.stock === 0
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:scale-105 hover:shadow-xl'
-                  } flex items-center justify-center space-x-3`}
+                      ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                      : 'bg-gray-900 text-white hover:bg-gray-800'
+                  }`}
                 >
                   <ShoppingCart className="h-6 w-6" />
                   <span>
-                    {product.lensCompatible 
-                      ? 'Customize & Add to Cart' 
-                      : product.stock === 0 
-                        ? 'Out of Stock' 
-                        : 'Add to Cart'
-                    }
+                    {product.lensCompatible
+                      ? 'Customize & Add to Cart'
+                      : product.stock === 0
+                      ? 'Out of Stock'
+                      : 'Add to Cart'}
                   </span>
                 </button>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="py-4 px-6 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center space-x-2">
+                  <button className="py-3 border-2 border-gray-300 rounded-lg font-medium text-gray-700 hover:border-gray-900 hover:bg-gray-50 transition flex items-center justify-center space-x-2">
                     <Heart className="h-5 w-5" />
                     <span>Wishlist</span>
                   </button>
-                  <button className="py-4 px-6 border-2 border-gray-300 rounded-xl font-semibold text-gray-700 hover:border-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center space-x-2">
+                  <button className="py-3 border-2 border-gray-300 rounded-lg font-medium text-gray-700 hover:border-gray-900 hover:bg-gray-50 transition flex items-center justify-center space-x-2">
                     <Share2 className="h-5 w-5" />
                     <span>Share</span>
                   </button>
                 </div>
               </div>
 
-              {/* Guarantees */}
-              <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-6 space-y-4 border border-gray-200">
-                <div className="flex items-center space-x-4">
-                  <div className="bg-blue-100 rounded-full p-3">
-                    <Truck className="h-6 w-6 text-blue-600" />
+              {/* ── GUARANTEES (now HomePage‑style cards) ── */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+                {[
+                  { Icon: Truck, title: 'Free Shipping', desc: 'On orders over $150' },
+                  { Icon: RotateCcw, title: '90‑Day Returns', desc: 'Satisfaction guaranteed' },
+                  { Icon: Shield, title: '2‑Year Warranty', desc: 'Premium protection' }
+                ].map((g, i) => (
+                  <div
+                    key={i}
+                    className="bg-white p-6 rounded-xl text-center shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <g.Icon className="h-6 w-6 text-gray-700" />
+                    </div>
+                    <h4 className="font-medium text-gray-900 mb-1">{g.title}</h4>
+                    <p className="text-sm text-gray-600">{g.desc}</p>
                   </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">Free Shipping</p>
-                    <p className="text-sm text-gray-600">On orders over $150</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="bg-green-100 rounded-full p-3">
-                    <RotateCcw className="h-6 w-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">90-Day Returns</p>
-                    <p className="text-sm text-gray-600">Satisfaction guaranteed</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="bg-purple-100 rounded-full p-3">
-                    <Shield className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">2-Year Warranty</p>
-                    <p className="text-sm text-gray-600">Premium protection</p>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Lens Selector Modal */}
+      {/* ── LENS SELECTOR MODAL ── */}
       <LensSelector
         isOpen={isLensSelectorOpen}
         onClose={() => setIsLensSelectorOpen(false)}
         onAdd={handleAddToCart}
         productName={product.name}
       />
+
+      {/* ── ANIMATIONS ── */}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+      `}</style>
     </div>
   );
 }

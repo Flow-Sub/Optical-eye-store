@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, CreditCard, Truck, Shield, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CreditCard, Truck, Shield, CheckCircle, Sparkles } from 'lucide-react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { createOrder, updateProductStock } from '../services/airtable';
@@ -35,80 +35,73 @@ export function CheckoutPage() {
   const finalTotal = total + shippingCost + tax;
 
   const handlePlaceOrder = async () => {
-  try {
-    // Generate order ID
-    const orderId = `ORD-${Date.now().toString().slice(-8)}`;
-    
-    // Prepare shipping address
-    const shippingAddress = `${shippingInfo.firstName} ${shippingInfo.lastName}
+    try {
+      const orderId = `ORD-${Date.now().toString().slice(-8)}`;
+      
+      const shippingAddress = `${shippingInfo.firstName} ${shippingInfo.lastName}
 ${shippingInfo.address}
 ${shippingInfo.city}, ${shippingInfo.state} ${shippingInfo.zipCode}
 ${shippingInfo.country}
 Phone: ${shippingInfo.phone}`;
 
-    // Prepare order items
-    const orderItems = items.map(item => ({
-      productId: item.product.id,
-      productName: item.product.name,
-      brand: item.product.brand,
-      price: item.product.price,
-      quantity: item.quantity,
-      lensOption: item.lensOption ? {
-        name: item.lensOption.name,
-        price: item.lensOption.price
-      } : null,
-      coatings: item.coatings?.map(c => ({
-        name: c.name,
-        price: c.price
-      })) || [],
-      prescriptionData: item.prescriptionData || null
-    }));
+      const orderItems = items.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        brand: item.product.brand,
+        price: item.product.price,
+        quantity: item.quantity,
+        lensOption: item.lensOption ? {
+          name: item.lensOption.name,
+          price: item.lensOption.price
+        } : null,
+        coatings: item.coatings?.map(c => ({
+          name: c.name,
+          price: c.price
+        })) || [],
+        prescriptionData: item.prescriptionData || null
+      }));
 
-    // Create order in Airtable
-    await createOrder({
-      orderId,
-      customerName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
-      customerEmail: shippingInfo.email,
-      customerPhone: shippingInfo.phone,
-      shippingAddress,
-      orderItems: JSON.stringify(orderItems),
-      subtotal: total,
-      shippingCost,
-      tax,
-      orderTotal: finalTotal,
-      numberOfItems: items.reduce((sum, item) => sum + item.quantity, 0),
-      orderStatus: 'pending',
-      orderDate: new Date().toISOString(),
-    });
+      await createOrder({
+        orderId,
+        customerName: `${shippingInfo.firstName} ${shippingInfo.lastName}`,
+        customerEmail: shippingInfo.email,
+        customerPhone: shippingInfo.phone,
+        shippingAddress,
+        orderItems: JSON.stringify(orderItems),
+        subtotal: total,
+        shippingCost,
+        tax,
+        orderTotal: finalTotal,
+        numberOfItems: items.reduce((sum, item) => sum + item.quantity, 0),
+        orderStatus: 'pending',
+        orderDate: new Date().toISOString(),
+      });
 
-    // Update product stock
-    for (const item of items) {
-      await updateProductStock(item.product.id, item.quantity);
+      for (const item of items) {
+        await updateProductStock(item.product.id, item.quantity);
+      }
+
+      setOrderPlaced(true);
+      setStep('confirmation');
+      
+      setTimeout(() => {
+        clearCart();
+      }, 2000);
+    } catch (error) {
+      console.error('Failed to place order:', error);
+      alert('Failed to place order. Please try again.');
     }
-
-    // Show confirmation
-    setOrderPlaced(true);
-    setStep('confirmation');
-    
-    // Clear cart after delay
-    setTimeout(() => {
-      clearCart();
-    }, 2000);
-  } catch (error) {
-    console.error('Failed to place order:', error);
-    alert('Failed to place order. Please try again.');
-  }
-};
+  };
 
   if (items.length === 0 && !orderPlaced) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center pt-28">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
-          <p className="text-gray-600 mb-8">Add some items to proceed with checkout</p>
+          <p className="text-gray-600 font-light mb-8">Add some items to proceed with checkout</p>
           <Link
             to="/products"
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="inline-block bg-gray-900 text-white px-8 py-3 font-light hover:bg-gray-800 transition-colors"
           >
             Continue Shopping
           </Link>
@@ -118,38 +111,44 @@ Phone: ${shippingInfo.phone}`;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white pt-28">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-10">
           <Link
             to="/cart"
-            className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-4"
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 font-light transition-colors"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Cart
           </Link>
-          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+          <div className="inline-flex items-center space-x-2 text-xs uppercase tracking-wider text-gray-500 mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Secure Checkout</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900">Checkout</h1>
         </div>
 
         {step === 'confirmation' ? (
-          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-            <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-6" />
+          <div className="bg-white border border-gray-200 rounded-2xl p-12 text-center max-w-2xl mx-auto">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="h-10 w-10 text-green-600" />
+            </div>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Order Confirmed!</h2>
-            <p className="text-xl text-gray-600 mb-6">
+            <p className="text-lg text-gray-600 font-light mb-8">
               Thank you for your order. We'll send you a confirmation email shortly.
             </p>
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
-              <p className="text-gray-700">
-                <strong>Order Number:</strong> #ORD-{Date.now().toString().slice(-6)}
+            <div className="bg-gray-50 rounded-xl p-6 mb-8">
+              <p className="text-gray-700 font-light">
+                <strong className="font-medium">Order Number:</strong> #ORD-{Date.now().toString().slice(-6)}
               </p>
-              <p className="text-gray-700 mt-2">
-                <strong>Total:</strong> ${finalTotal.toFixed(2)}
+              <p className="text-gray-700 font-light mt-2">
+                <strong className="font-medium">Total:</strong> ${finalTotal.toFixed(2)}
               </p>
             </div>
             <Link
               to="/"
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              className="inline-block bg-gray-900 text-white px-8 py-3 font-light hover:bg-gray-800 transition-colors"
             >
               Continue Shopping
             </Link>
@@ -159,106 +158,106 @@ Phone: ${shippingInfo.phone}`;
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Shipping Information */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Shipping Information</h2>
-                  <Truck className="h-6 w-6 text-blue-600" />
+                  <Truck className="h-5 w-5 text-gray-400" />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       First Name
                     </label>
                     <input
                       type="text"
                       value={shippingInfo.firstName}
                       onChange={(e) => setShippingInfo({...shippingInfo, firstName: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       Last Name
                     </label>
                     <input
                       type="text"
                       value={shippingInfo.lastName}
                       onChange={(e) => setShippingInfo({...shippingInfo, lastName: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       Email Address
                     </label>
                     <input
                       type="email"
                       value={shippingInfo.email}
                       onChange={(e) => setShippingInfo({...shippingInfo, email: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       Phone Number
                     </label>
                     <input
                       type="tel"
                       value={shippingInfo.phone}
                       onChange={(e) => setShippingInfo({...shippingInfo, phone: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       Street Address
                     </label>
                     <input
                       type="text"
                       value={shippingInfo.address}
                       onChange={(e) => setShippingInfo({...shippingInfo, address: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       City
                     </label>
                     <input
                       type="text"
                       value={shippingInfo.city}
                       onChange={(e) => setShippingInfo({...shippingInfo, city: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       State
                     </label>
                     <input
                       type="text"
                       value={shippingInfo.state}
                       onChange={(e) => setShippingInfo({...shippingInfo, state: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       ZIP Code
                     </label>
                     <input
                       type="text"
                       value={shippingInfo.zipCode}
                       onChange={(e) => setShippingInfo({...shippingInfo, zipCode: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
@@ -266,15 +265,15 @@ Phone: ${shippingInfo.phone}`;
               </div>
 
               {/* Payment Information */}
-              <div className="bg-white rounded-lg shadow-sm p-6">
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">Payment Information</h2>
-                  <CreditCard className="h-6 w-6 text-blue-600" />
+                  <CreditCard className="h-5 w-5 text-gray-400" />
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       Card Number
                     </label>
                     <input
@@ -282,13 +281,13 @@ Phone: ${shippingInfo.phone}`;
                       placeholder="1234 5678 9012 3456"
                       value={paymentInfo.cardNumber}
                       onChange={(e) => setPaymentInfo({...paymentInfo, cardNumber: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-light text-gray-700 mb-2">
                         Expiry Date
                       </label>
                       <input
@@ -296,12 +295,12 @@ Phone: ${shippingInfo.phone}`;
                         placeholder="MM/YY"
                         value={paymentInfo.expiryDate}
                         onChange={(e) => setPaymentInfo({...paymentInfo, expiryDate: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-light text-gray-700 mb-2">
                         CVV
                       </label>
                       <input
@@ -309,20 +308,20 @@ Phone: ${shippingInfo.phone}`;
                         placeholder="123"
                         value={paymentInfo.cvv}
                         onChange={(e) => setPaymentInfo({...paymentInfo, cvv: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                         required
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-light text-gray-700 mb-2">
                       Name on Card
                     </label>
                     <input
                       type="text"
                       value={paymentInfo.nameOnCard}
                       onChange={(e) => setPaymentInfo({...paymentInfo, nameOnCard: e.target.value})}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-gray-900 focus:border-gray-900 font-light"
                       required
                     />
                   </div>
@@ -332,24 +331,24 @@ Phone: ${shippingInfo.phone}`;
 
             {/* Order Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
+              <div className="bg-white border border-gray-200 rounded-xl p-6 sticky top-32">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
                 
-                <div className="space-y-4 mb-6">
+                <div className="space-y-3 mb-6">
                   {items.map((item) => (
-                    <div key={item.id} className="flex items-start space-x-3">
+                    <div key={item.id} className="flex items-start space-x-3 pb-3 border-b border-gray-100 last:border-0">
                       <img
                         src={item.product.images[0]}
                         alt={item.product.name}
-                        className="w-12 h-12 object-cover rounded"
+                        className="w-12 h-12 object-cover rounded-lg"
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
                           {item.product.name}
                         </p>
-                        <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                        <p className="text-xs text-gray-600 font-light">Qty: {item.quantity}</p>
                         {item.lensOption && (
-                          <p className="text-xs text-blue-600">+ {item.lensOption.name}</p>
+                          <p className="text-xs text-gray-600 font-light">+ {item.lensOption.name}</p>
                         )}
                       </div>
                       <p className="text-sm font-medium text-gray-900">
@@ -360,39 +359,37 @@ Phone: ${shippingInfo.phone}`;
                   ))}
                 </div>
 
-                <div className="border-t pt-4 space-y-2">
+                <div className="border-t border-gray-200 pt-4 space-y-2 mb-6">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="text-gray-900">${total.toFixed(2)}</span>
+                    <span className="text-gray-600 font-light">Subtotal</span>
+                    <span className="text-gray-900 font-medium">${total.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping</span>
-                    <span className="text-gray-900">
+                    <span className="text-gray-600 font-light">Shipping</span>
+                    <span className="text-gray-900 font-medium">
                       {shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Tax</span>
-                    <span className="text-gray-900">${tax.toFixed(2)}</span>
+                    <span className="text-gray-600 font-light">Tax</span>
+                    <span className="text-gray-900 font-medium">${tax.toFixed(2)}</span>
                   </div>
-                  <div className="border-t pt-2 flex justify-between font-semibold">
-                    <span className="text-gray-900">Total</span>
-                    <span className="text-gray-900">${finalTotal.toFixed(2)}</span>
+                  <div className="border-t border-gray-200 pt-3 flex justify-between">
+                    <span className="font-semibold text-gray-900">Total</span>
+                    <span className="text-xl font-bold text-gray-900">${finalTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
                 <button
                   onClick={handlePlaceOrder}
-                  className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors mt-6"
+                  className="w-full bg-gray-900 text-white py-3.5 px-6 font-light hover:bg-gray-800 transition-colors"
                 >
                   Place Order
                 </button>
 
-                <div className="mt-6 flex items-center justify-center space-x-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Shield className="h-4 w-4 mr-1" />
-                    <span>Secure Payment</span>
-                  </div>
+                <div className="mt-6 pt-6 border-t border-gray-200 flex items-center justify-center text-xs text-gray-600 font-light">
+                  <Shield className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+                  <span>Secure Payment</span>
                 </div>
               </div>
             </div>

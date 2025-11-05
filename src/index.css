@@ -31,3 +31,10 @@
 .animate-slide-in {
   animation: slide-in 0.3s ease-out;
 }
+
+@layer utilities {
+  .bg-clip-text {
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}

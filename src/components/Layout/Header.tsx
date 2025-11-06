@@ -18,7 +18,7 @@ export function Header() {
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/products' },
     { name: 'Services', href: '/services' },
-    { name: 'Appointments', href: '/appointments' },
+    // { name: 'Appointments', href: '/appointments' },
     { name: 'About', href: '/about' }
   ];
 
@@ -119,26 +119,36 @@ export function Header() {
                           </div>
                           <div className="py-2">
                             <Link to="/profile" onClick={() => setIsUserMenuOpen(false)}
-                                  className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-50">
-                              <div className="flex items-center space-x-3"><User className="h-4 w-4" /><span>My Profile</span></div>
+                                  className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-50 transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <User className="h-4 w-4 text-gray-600" />
+                                <span>My Profile</span>
+                              </div>
                             </Link>
-                            <Link to="/orders" onClick={() => setIsUserMenuOpen(false)}
-                                  className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-50">
-                              <div className="flex items-center space-x-3"><Package className="h-4 w-4" /><span>My Orders</span></div>
+                            <Link to="/my-orders" onClick={() => setIsUserMenuOpen(false)}
+                                  className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-50 transition-colors">
+                              <div className="flex items-center space-x-3">
+                                <Package className="h-4 w-4 text-gray-600" />
+                                <span>My Orders</span>
+                              </div>
                             </Link>
                             {user.isAdmin && (
                               <Link to="/admin" onClick={() => setIsUserMenuOpen(false)}
-                                    className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-50 border-t">
-                                <div className="flex items-center space-x-3"><Settings className="h-4 w-4" /><span>Admin Dashboard</span></div>
+                                    className="flex items-center justify-between px-5 py-3 text-sm hover:bg-gray-50 border-t transition-colors">
+                                <div className="flex items-center space-x-3">
+                                  <Settings className="h-4 w-4 text-gray-600" />
+                                  <span>Admin Dashboard</span>
+                                </div>
                               </Link>
                             )}
                           </div>
                           <div className="border-t">
                             <button
                               onClick={() => { logout(); setIsUserMenuOpen(false); }}
-                              className="w-full text-left px-5 py-3 text-sm text-rose-600 hover:bg-rose-50 flex items-center space-x-3"
+                              className="w-full text-left px-5 py-3 text-sm text-rose-600 hover:bg-rose-50 flex items-center space-x-3 transition-colors"
                             >
-                              <LogOut className="h-4 w-4" /><span>Sign Out</span>
+                              <LogOut className="h-4 w-4" />
+                              <span>Sign Out</span>
                             </button>
                           </div>
                         </div>
@@ -167,11 +177,62 @@ export function Header() {
           </div>
         </nav>
 
-        {/* ── MOBILE MENU (still centered under the pill) ── */}
+        {/* ── MOBILE MENU ── */}
         {isMenuOpen && (
           <div className="fixed inset-x-0 top-24 mx-6 mt-4 bg-white/95 backdrop-blur-xl
-                          rounded-3xl shadow-2xl border border-white/30 p-6 md:hidden">
-            {/* … same mobile markup as before … */}
+                          rounded-3xl shadow-2xl border border-white/30 p-6 md:hidden z-50">
+            <div className="space-y-3">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setIsMenuOpen(false)}
+                  className={`block px-4 py-3 rounded-xl text-sm font-medium transition-colors
+                              ${isActive(item.href) 
+                                ? 'bg-gradient-to-r from-gray-900 to-black text-white' 
+                                : 'text-gray-700 hover:bg-gray-100'}`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              
+              {/* User menu items for mobile */}
+              {user && (
+                <>
+                  <div className="border-t pt-3 mt-3">
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      My Profile
+                    </Link>
+                    <Link
+                      to="/my-orders"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      My Orders
+                    </Link>
+                    {user.isAdmin && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setIsMenuOpen(false)}
+                        className="block px-4 py-3 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Admin Dashboard
+                      </Link>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => { logout(); setIsMenuOpen(false); }}
+                    className="w-full text-left px-4 py-3 rounded-xl text-sm font-medium text-rose-600 hover:bg-rose-50 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
       </header>

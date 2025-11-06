@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '../types';
+import { fetchUserByEmail, createUser, UserProfile } from '../services/airtable'; // Import the Airtable functions
 
 interface AuthContextType {
   user: User | null;
@@ -10,26 +11,6 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-// Mock users for demo purposes
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'admin@optical.com',
-    name: 'Admin User',
-    phone: '+1-555-0123',
-    isAdmin: true,
-    createdAt: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '2',
-    email: 'customer@example.com',
-    name: 'John Customer',
-    phone: '+1-555-0124',
-    isAdmin: false,
-    createdAt: '2024-01-02T00:00:00Z'
-  }
-];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -52,49 +33,81 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Mock authentication - in real app, this would be an API call
-    const mockUser = mockUsers.find(u => u.email === email);
-    if (mockUser && password === 'password') {
-      setUser(mockUser);
-      localStorage.setItem('optical_user', JSON.stringify(mockUser));
-      setLoading(false);
+    try {
+      // Fetch user from Airtable by email
+      const airtableUser = await fetchUserByEmail(email);
+      
+      if (!airtableUser) {
+        throw new Error('User not found');
+      }
+      
+      // Mock password check (for demo; in real app, use proper auth)
+      if (password !== 'password') {
+        throw new Error('Invalid password');
+      }
+      
+      // Map Airtable data to your User type
+      const loggedInUser: User = {
+        id: airtableUser.id,
+        email: airtableUser.email,
+        name: airtableUser.fullName,
+        phone: airtableUser.phoneNumber,
+        isAdmin: airtableUser.isAdmin,
+        createdAt: airtableUser.accountCreated,
+      };
+      
+      setUser(loggedInUser);
+      localStorage.setItem('optical_user', JSON.stringify(loggedInUser));
       return true;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
-    return false;
   };
 
   const register = async (email: string, password: string, name: string): Promise<boolean> => {
     setLoading(true);
     
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if user already exists
-    const existingUser = mockUsers.find(u => u.email === email);
-    if (existingUser) {
-      setLoading(false);
+    try {
+      // Check if user already exists in Airtable
+      const existingUser = await fetchUserByEmail(email);
+      if (existingUser) {
+        throw new Error('Email already exists');
+      }
+      
+      // Mock password validation (for demo; in real app, hash and store securely elsewhere)
+      if (password !== 'password') {
+        throw new Error('Invalid password setup');
+      }
+      
+      // Create user in Airtable
+      const newAirtableUser = await createUser({
+        email,
+        fullName: name,
+        isAdmin: false, // New users are not admins by default
+      });
+      
+      // Map to your User type
+      const newUser: User = {
+        id: newAirtableUser.id,
+        email: newAirtableUser.email,
+        name: newAirtableUser.fullName,
+        phone: newAirtableUser.phoneNumber,
+        isAdmin: newAirtableUser.isAdmin,
+        createdAt: newAirtableUser.accountCreated,
+      };
+      
+      setUser(newUser);
+      localStorage.setItem('optical_user', JSON.stringify(newUser));
+      return true;
+    } catch (error) {
+      console.error('Register error:', error);
       return false;
+    } finally {
+      setLoading(false);
     }
-    
-    // Create new user
-    const newUser: User = {
-      id: Date.now().toString(),
-      email,
-      name,
-      isAdmin: false,
-      createdAt: new Date().toISOString()
-    };
-    
-    mockUsers.push(newUser);
-    setUser(newUser);
-    localStorage.setItem('optical_user', JSON.stringify(newUser));
-    setLoading(false);
-    return true;
   };
 
   const logout = () => {

@@ -13,13 +13,20 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
     "airtable": "^0.12.2",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.23.24",
+    "gsap": "^3.13.0",
     "lucide-react": "^0.344.0",
+    "motion": "^12.23.24",
+    "papaparse": "^5.5.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.9.4"
+    "react-router-dom": "^7.9.4",
+    "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/papaparse": "^5.5.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

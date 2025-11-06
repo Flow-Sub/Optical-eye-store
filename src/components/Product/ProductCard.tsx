@@ -1,7 +1,7 @@
 /* src/components/Product/ProductCard.tsx */
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Star, Eye, Heart, Zap, Sparkles } from 'lucide-react';
+import { ShoppingCart, Star, Eye, Heart, Zap, Sparkles, Bell } from 'lucide-react'; // Added Bell for notify
 import { Product } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { WishlistButton } from '../Wishlist/WishlistButton';
@@ -20,6 +20,48 @@ export function ProductCard({ product }: ProductCardProps) {
     addToCart(product);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 2000);
+  };
+
+  // NEW: Helper to render the CTA button based on state
+  const renderCtaButton = () => {
+    if (product.stock === 0) {
+      // Out of Stock: "Notify Me" link to detail (for back-in-stock alerts)
+      return (
+        <Link
+          to={`/product/${product.id}`}
+          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-light transition-colors"  // ← UPDATED: Same as normal button
+          title="Get notified when back in stock"
+        >
+          <Bell className="h-4 w-4" />
+          <span className="text-sm hidden sm:inline">Notify Me</span>
+        </Link>
+      );
+    }
+
+    if (product.lensCompatible) {
+      // Lens Compatible: "Customize" link to detail (for lens selection)
+      return (
+        <Link
+          to={`/product/${product.id}`}
+          className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-light transition-colors"  // ← UPDATED: Same as normal button
+          title="Customize with lenses"
+        >
+          <Sparkles className="h-4 w-4" />
+          <span className="text-sm hidden sm:inline">Customize</span>
+        </Link>
+      );
+    }
+
+    // Normal: Quick-add button (your original)
+    return (
+      <button
+        onClick={quickAdd}
+        className="p-3 bg-gray-900 text-white hover:bg-gray-800 rounded-lg transition-colors"
+        title="Add to cart"
+      >
+        <ShoppingCart className="h-5 w-5" />
+      </button>
+    );
   };
 
   return (
@@ -110,17 +152,8 @@ export function ProductCard({ product }: ProductCardProps) {
             )}
           </div>
 
-          <button
-            onClick={quickAdd}
-            disabled={product.stock === 0 || product.lensCompatible}
-            className={`p-3 rounded-lg transition-colors ${
-              product.stock === 0 || product.lensCompatible
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-gray-900 text-white hover:bg-gray-800'
-            }`}
-          >
-            <ShoppingCart className="h-5 w-5" />
-          </button>
+          {/* UPDATED: Dynamic CTA Button */}
+          {renderCtaButton()}
         </div>
 
         {/* Features */}

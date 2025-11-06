@@ -33,13 +33,13 @@ const mapAirtableToProduct = (record: any): Product => {
       console.warn('Failed to parse Image field, trying Photos field');
       // Fallback to Photos field
       if (fields['Photos']) {
-        images = fields['Photos'].map((photo: any) => photo.url);
+        images = fields['Photos'].map((photo: { url: string }) => photo.url); // Fixed: Typed photo
       }
     }
   }
   // Fallback to Photos field if Image is not present
   else if (fields['Photos']) {
-    images = fields['Photos'].map((photo: any) => photo.url);
+    images = fields['Photos'].map((photo: { url: string }) => photo.url); // Fixed: Typed photo
   }
   
   return {
@@ -119,6 +119,28 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
     console.error('Error response:', error.error);
     throw new Error(error.message || 'Failed to create product');
   }
+};
+
+// NEW: Batch create function for CSV import (Fixed: let for successCount)
+export const batchCreateProducts = async (products: Partial<Product>[]): Promise<{ success: number; errors: string[] }> => {
+  let successCount = 0; // Fixed: let instead of const
+  const errors: string[] = [];
+  let delay = 0; // For rate limiting
+
+  for (const product of products) {
+    try {
+      // Delay between requests (200ms) to respect Airtable limits
+      await new Promise(resolve => setTimeout(resolve, delay));
+      delay = 200;
+
+      await createProduct(product);
+      successCount++; // Now works with let
+    } catch (error: any) {
+      errors.push(`Failed to create "${product.name || 'Unnamed'}": ${error.message}`);
+    }
+  }
+
+  return { success: successCount, errors };
 };
 
 // Update product
@@ -362,11 +384,10 @@ export const updateOrderStatus = async (
 };
 
 // Update product stock
-// Update product stock
 export const updateProductStock = async (productId: string, quantitySold: number): Promise<void> => {
   try {
     const product = await base(PRODUCTS_TABLE).find(productId);
-    const currentStock = parseInt(String(product.fields['Stock Quantity'] || 0)) || 0;  // ← FIXED LINE
+    const currentStock = parseInt(String(product.fields['Stock Quantity'] || 0)) || 0;
     const newStock = Math.max(0, currentStock - quantitySold);
     
     await base(PRODUCTS_TABLE).update(
@@ -376,5 +397,115 @@ export const updateProductStock = async (productId: string, quantitySold: number
     );
   } catch (error) {
     console.error('Error updating stock:', error);
+  }
+};
+
+// ============= USERS =============
+const USERS_TABLE = import.meta.env.VITE_AIRTABLE_USERS_TABLE || 'Users';
+
+export interface UserProfile {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  isAdmin: boolean;
+  profilePhoto?: string;
+  accountCreated: string;
+  orderCount?: number;
+  totalOrderValue?: string;
+  lastOrderDate?: string;
+}
+
+const mapAirtableToUser = (record: any): UserProfile => {
+  const fields = record.fields;
+  return {
+    id: record.id,
+    userId: fields['User ID'] || '',
+    fullName: fields['Full Name'] || '',
+    email: fields['Email Address'] || '',
+    phoneNumber: fields['Phone Number'] || '',
+    isAdmin: fields['Admin Status'] || false,
+    profilePhoto: fields['Profile Photo']?.[0]?.url || '',
+    accountCreated: fields['Account Created'] || new Date().toISOString(),
+    orderCount: fields['Order Count'] || 0,
+    totalOrderValue: fields['Total Order Value'] || '0',
+    lastOrderDate: fields['Last Order Date'] || '',
+  };
+};
+
+// Fetch user by email
+export const fetchUserByEmail = async (email: string): Promise<UserProfile | null> => {
+  try {
+    const records = await base(USERS_TABLE)
+      .select({
+        filterByFormula: `{Email Address} = '${email}'`,
+        maxRecords: 1,
+      })
+      .firstPage();
+
+    if (records.length === 0) return null;
+    return mapAirtableToUser(records[0]);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
+};
+
+// Update user profile
+export const updateUserProfile = async (
+  id: string, 
+  updates: Partial<UserProfile>
+): Promise<UserProfile> => {
+  try {
+    const fields: any = {};
+    
+    if (updates.fullName) fields['Full Name'] = updates.fullName;
+    if (updates.phoneNumber !== undefined) fields['Phone Number'] = updates.phoneNumber;
+    if (updates.profilePhoto) fields['Profile Photo'] = [{ url: updates.profilePhoto }];
+
+    const record = await base(USERS_TABLE).update(id, fields, { typecast: true });
+    return mapAirtableToUser(record);
+  } catch (error) {
+    console.error('Error updating user:', error);
+    throw new Error('Failed to update profile');
+  }
+};
+
+export const createUser = async (userData: { email: string; fullName: string; phoneNumber?: string; isAdmin?: boolean }): Promise<UserProfile> => {
+  try {
+    const record = await base(USERS_TABLE).create(
+      {
+        'User ID': `user-${Date.now()}`, // Simple unique ID
+        'Full Name': userData.fullName,
+        'Email Address': userData.email,
+        'Phone Number': userData.phoneNumber || '',
+        'Admin Status': userData.isAdmin || false,
+        'Account Created': new Date().toISOString().split('T')[0], // YYYY-MM-DD
+      },
+      { typecast: true }
+    );
+
+    return mapAirtableToUser(record);
+  } catch (error: any) {
+    console.error('Error creating user:', error);
+    throw new Error('Failed to create user');
+  }
+};
+
+// Fetch orders by customer email
+export const fetchOrdersByEmail = async (email: string): Promise<Order[]> => {
+  try {
+    const records = await base(ORDERS_TABLE)
+      .select({
+        filterByFormula: `{Customer Email} = '${email}'`,
+        sort: [{ field: 'Order Date', direction: 'desc' }],
+      })
+      .all();
+
+    return records.map(mapAirtableToOrder);
+  } catch (error) {
+    console.error('Error fetching user orders:', error);
+    throw new Error('Failed to fetch orders');
   }
 };

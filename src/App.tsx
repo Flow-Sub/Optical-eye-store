@@ -13,6 +13,8 @@ import { AboutPage } from './pages/AboutPage';
 import { CheckoutPage } from './pages/CheckoutPage';
 import { LoginPage, RegisterPage } from './pages/AuthPages';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { MyProfilePage } from './pages/MyProfilePage';
+import { MyOrdersPage } from './pages/MyOrdersPage';
 
 // Protected Route Component
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode, requireAdmin?: boolean }) {
@@ -49,6 +51,16 @@ function AppRoutes() {
         <Route path="/services" element={<ServicesPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/profile" element={
+          <ProtectedRoute>
+            <MyProfilePage />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-orders" element={
+          <ProtectedRoute>
+            <MyOrdersPage />
+          </ProtectedRoute>
+        } />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route 

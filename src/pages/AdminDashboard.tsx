@@ -127,13 +127,13 @@ export function AdminDashboard() {
               <RefreshCw className="h-4 w-4" />
               <span>Refresh</span>
             </button>
-            <button
+           <button
               onClick={() => setIsCreateModalOpen(true)}
               className="flex items-center space-x-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-light transition-colors"
             >
               <Plus className="h-4 w-4" />
-              <span>Add Product</span>
-            </button>
+              <span>Add Products</span> {/* Updated: Plural for single/bulk */}
+              </button>
           </div>
         </div>
 

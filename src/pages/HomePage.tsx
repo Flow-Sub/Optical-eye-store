@@ -1,13 +1,14 @@
-/* src/pages/HomePage.jsx */
+/* src/pages/HomePage.tsx */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Star, Shield, Truck, Calendar, ShoppingBag, ChevronRight } from 'lucide-react';
 import { useProducts } from '../hooks/useProducts';
 import { ProductCard } from '../components/Product/ProductCard';
+import { Carousel, Card } from '../components/ui/apple-cards-carousel';
+import { gsap } from 'gsap'; // Added for FlowingMenu
 
 const IMAGES = {
   hero: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=1600&q=80',
-  // newArr1: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=800&q=80',
   newArr1: 'https://img01.ztat.net/article/spp-media-p1/81ec8d9b0b8d436f8b932b32a1cc69f7/905c99d2a74b42a6a29644d6035f0e46.jpg?imwidth=762',
   newArr2: 'https://tuzzut.com/cdn/shop/files/InShot-20250107_104356623_800x.jpg?v=1736236753',
   bestSell1: 'https://t3.ftcdn.net/jpg/15/50/58/70/360_F_1550587027_Fp2eCN1WWDnVKCzN6F3rCOHnlkMSziZh.jpg',
@@ -16,30 +17,216 @@ const IMAGES = {
   eyeTest: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1600&q=80'
 };
 
+// FlowingMenu Component (Added from your code)
+interface MenuItemProps {
+  link: string;
+  text: string;
+  image: string;
+}
+
+interface FlowingMenuProps {
+  items?: MenuItemProps[];
+}
+
+const FlowingMenu: React.FC<FlowingMenuProps> = ({ items = [] }) => {
+  return (
+    <div className="w-full h-full overflow-hidden">
+      <nav className="flex flex-col h-full m-0 p-0">
+        {items.map((item, idx) => (
+          <MenuItem key={idx} {...item} />
+        ))}
+      </nav>
+    </div>
+  );
+};
+
+const MenuItem: React.FC<MenuItemProps> = ({ link, text, image }) => {
+  const itemRef = React.useRef<HTMLDivElement>(null);
+  const marqueeRef = React.useRef<HTMLDivElement>(null);
+  const marqueeInnerRef = React.useRef<HTMLDivElement>(null);
+
+  const animationDefaults = { duration: 0.6, ease: 'expo' };
+
+  const findClosestEdge = (mouseX: number, mouseY: number, width: number, height: number): 'top' | 'bottom' => {
+    const topEdgeDist = Math.pow(mouseX - width / 2, 2) + Math.pow(mouseY, 2);
+    const bottomEdgeDist = Math.pow(mouseX - width / 2, 2) + Math.pow(mouseY - height, 2);
+    return topEdgeDist < bottomEdgeDist ? 'top' : 'bottom';
+  };
+
+  const handleMouseEnter = (ev: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const edge = findClosestEdge(ev.clientX - rect.left, ev.clientY - rect.top, rect.width, rect.height);
+
+    const tl = gsap.timeline({ defaults: animationDefaults });
+    tl.set(marqueeRef.current, { y: edge === 'top' ? '-101%' : '101%' })
+      .set(marqueeInnerRef.current, { y: edge === 'top' ? '101%' : '-101%' })
+      .to([marqueeRef.current, marqueeInnerRef.current], { y: '0%' });
+  };
+
+  const handleMouseLeave = (ev: React.MouseEvent<HTMLAnchorElement>) => {
+    if (!itemRef.current || !marqueeRef.current || !marqueeInnerRef.current) return;
+    const rect = itemRef.current.getBoundingClientRect();
+    const edge = findClosestEdge(ev.clientX - rect.left, ev.clientY - rect.top, rect.width, rect.height);
+
+    const tl = gsap.timeline({ defaults: animationDefaults }) as any; // Type assertion for TimelineMax
+    tl.to(marqueeRef.current, { y: edge === 'top' ? '-101%' : '101%' }).to(marqueeInnerRef.current, {
+      y: edge === 'top' ? '101%' : '-101%'
+    });
+  };
+
+  const repeatedMarqueeContent = React.useMemo(() => {
+    return Array.from({ length: 4 }).map((_, idx) => (
+      <React.Fragment key={idx}>
+        <span className="text-[#060010] uppercase font-normal text-[4vh] leading-[1.2] p-[1vh_1vw_0]">{text}</span>
+        <div
+          className="w-[200px] h-[7vh] my-[2em] mx-[2vw] p-[1em_0] rounded-[50px] bg-cover bg-center"
+          style={{ backgroundImage: `url(${image})` }}
+        />
+      </React.Fragment>
+    ));
+  }, [text, image]);
+
+  return (
+    <div className="flex-1 relative overflow-hidden text-center shadow-[0_-1px_0_0_#fff]" ref={itemRef}>
+      <a
+        className="flex items-center justify-center h-full relative cursor-pointer uppercase no-underline font-semibold text-white text-[4vh] hover:text-[#060010] focus:text-white focus-visible:text-[#060010]"
+        href={link}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        {text}
+      </a>
+      <div
+        className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none bg-white translate-y-[101%]"
+        ref={marqueeRef}
+      >
+        <div className="h-full w-[200%] flex" ref={marqueeInnerRef}>
+          <div className="flex items-center relative h-full w-[200%] will-change-transform animate-marquee">
+            {repeatedMarqueeContent}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Dummy content component for carousel cards (adapted to eyewear theme) - MOVED UP TO FIX HOISTING
+const EyewearDummyContent = ({ title, description }: { title: string; description: string }) => {
+  return (
+    <>
+      {[...new Array(3).fill(1)].map((_, index) => {
+        return (
+          <div
+            key={"eyewear-dummy" + index}
+            className="bg-[#F5F5F7] dark:bg-neutral-800 p-8 md:p-14 rounded-3xl mb-4"
+          >
+            <p className="text-neutral-600 dark:text-neutral-400 text-base md:text-2xl font-sans max-w-3xl mx-auto">
+              <span className="font-bold text-neutral-700 dark:text-neutral-200">
+                Discover {title}.
+              </span>{" "}
+              {description} Crafted with precision lenses and lightweight materials for all-day comfort.
+              Schedule an eye test today to find your perfect pair.
+            </p>
+            <img
+              src="https://images.unsplash.com/photo-1571019616233-50a6a467b9b3?q=80&w=1000&auto=format&fit=crop"
+              alt={`${title} mockup`}
+              height="500"
+              width="500"
+              className="md:w-1/2 md:h-1/2 h-full w-full mx-auto object-contain mt-6"
+            />
+          </div>
+        );
+      })}
+    </>
+  );
+};
+
+// Eyewear-themed data for the Apple-style carousel - NOW AFTER COMPONENT
+const eyewearCarouselData = [
+  {
+    category: "Classic Collection",
+    title: "Timeless Aviators",
+    src: "https://shopmachete.com/cdn/shop/files/Screenshot_2024-07-24_at_10.11.34_AM_01801631-cfe7-498b-819d-6468b7ff00ae.png?v=1723465917&width=2560",
+    content: <EyewearDummyContent title="Aviators" description="Iconic design meets modern comfort. Perfect for everyday wear." />,
+  },
+  {
+    category: "Sunglasses",
+    title: "Polarized Wayfarers",
+    src: "https://assets.ajio.com/medias/sys_master/root/h0a/h38/13549010223134/-473Wx593H-460387302-black-MODEL.jpg",
+    content: <EyewearDummyContent title="Wayfarers" description="UV protection with style. Ideal for sunny adventures." />,
+  },
+  {
+    category: "Reading Glasses",
+    title: "Elegant Round Frames",
+    src: "https://fashionrazor.com/cdn/shop/products/5_H2e55bf90248b4d359e02df908eca62d3k.jpg?v=1598084350",
+    content: <EyewearDummyContent title="Round Frames" description="Sophisticated style for focused reading sessions." />,
+  },
+  {
+    category: "Sports",
+    title: "Active Wraparounds",
+    src: "https://cdn.thewirecutter.com/wp-content/media/2024/12/BEST-SPORT-SUNGLASSES-2048px-5885-3x2-1.jpg?auto=webp&quality=75&crop=4:3,smart&width=1024",
+    content: <EyewearDummyContent title="Wraparounds" description="Durable and lightweight for your active lifestyle." />,
+  },
+  {
+    category: "Designer",
+    title: "Luxury Cat-Eye",
+    src: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+    content: <EyewearDummyContent title="Cat-Eye" description="Elevate your look with premium craftsmanship." />,
+  },
+  {
+    category: "Kids",
+    title: "Fun Geometric Shapes",
+    src: "https://static.zennioptical.com/marketing/campaign/back_to_school/2025/TLC/250808-back-to-school-LP-hero-xxs.png",
+    content: <EyewearDummyContent title="Geometric" description="Colorful and safe for young explorers." />,
+  },
+];
+
+// Carousel Demo Component
+export function EyewearCardsCarouselDemo() {
+  const cards = eyewearCarouselData.map((card, index) => (
+    <Card key={card.src} card={card} index={index} />
+  ));
+
+  return (
+    <div className="w-full h-full py-8">
+      <Carousel items={cards} />
+    </div>
+  );
+}
+
+// FlowingMenu Demo Data (Eyewear-themed)
+const flowingMenuItems = [
+  { link: '/collections/classic', text: 'Classic', image: 'https://shopmachete.com/cdn/shop/files/Screenshot_2024-07-24_at_10.11.34_AM_01801631-cfe7-498b-819d-6468b7ff00ae.png?v=1723465917&width=2560' },
+  { link: '/collections/sunglasses', text: 'Sunglasses', image: 'https://assets.ajio.com/medias/sys_master/root/h0a/h38/13549010223134/-473Wx593H-460387302-black-MODEL.jpg' },
+  { link: '/collections/reading', text: 'Reading', image: 'https://fashionrazor.com/cdn/shop/products/5_H2e55bf90248b4d359e02df908eca62d3k.jpg?v=1598084350' },
+  { link: '/collections/sports', text: 'Sports', image: 'https://cdn.thewirecutter.com/wp-content/media/2024/12/BEST-SPORT-SUNGLASSES-2048px-5885-3x2-1.jpg?auto=webp&quality=75&crop=4:3,smart&width=1024' }
+];
+
 export function HomePage() {
-    const { products, loading } = useProducts();
-    const featuredProducts = products.slice(0, 4);
-    const newArrivals = products.slice(0, 2);
-    const bestsellers = products.slice(2, 4);
+  const { products, loading } = useProducts();
+  const featuredProducts = products.slice(0, 4);
+  const newArrivals = products.slice(0, 2);
+  const bestsellers = products.slice(2, 4);
 
-    // ADD THIS - Hero Slider State
-    const [currentSlide, setCurrentSlide] = React.useState(0);
+  // Hero Slider State
+  const [currentSlide, setCurrentSlide] = React.useState(0);
+  
+  const heroSlides = [
+    'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=1920&q=80',
+    'https://www.zennioptical.com/blog/wp-content/uploads/2017/09/black-and-white-glasses.jpg',
+    'https://graziamagazine.com/us/wp-content/uploads/sites/15/2025/07/kylie-jenner-otra-eyewear-grandquist-collab-6.jpg',
+    'https://media.oliverpeoples.com/LPdataCapture/2024/OP_JoinNewsletter_Overlay.jpg?impolicy=HB_parameters&sclw=0.4&sclh=0.4'
+  ];
+
+  // Auto-slide effect
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+    }, 3000); // Change slide every 5 seconds
     
-    const heroSlides = [
-      'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?auto=format&fit=crop&w=1920&q=80',
-      'https://i.shgcdn.com/f2d5f37c-1280-41fe-ae6d-f9bd80a11448/-/format/auto/-/quality/normal/',
-      'https://image5.cdnsbg.com/cms.smartbuyglasses.com/wp-content/uploads/2023/12/Models-1.png',
-      'https://www.nifties-eyewear.com/media/uwqf055u/ni8560_col6621_2_medres.jpg?width=1000&format=webp&quality=85&v=1dc052d2b0f6a50'
-    ];
-
-    // Auto-slide effect
-    React.useEffect(() => {
-      const timer = setInterval(() => {
-        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-      }, 5000); // Change slide every 5 seconds
-      
-      return () => clearInterval(timer);
-    }, []);
+    return () => clearInterval(timer);
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
@@ -109,11 +296,6 @@ export function HomePage() {
             />
           ))}
         </div>
-
-        {/* Scroll indicator */}
-        {/* <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hidden md:block">
-          <ChevronRight className="h-6 w-6 text-white rotate-90" />
-        </div> */}
       </section>
 
       {/* NEW ARRIVALS */}
@@ -184,33 +366,86 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* SERVICES */}
-      <section className="py-20 bg-gray-50">
+      {/* NEW: Flowing Menu Collections (Added above SERVICES) */}
+      <section className="py-20 bg-black"> {/* Updated: Changed bg-gray-50 to bg-black */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Our Services</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">Comprehensive eye-care services tailored to your needs</p>
+          <div className="text-center mb-12 animate-fadeIn">
+            <h2 className="text-2xl md:text-3xl font-light text-white mb-3">Our Collections</h2> {/* Updated: text-gray-900 to text-white */}
+            <p className="text-gray-300 max-w-2xl mx-auto">Hover over collections for a flowing preview of styles</p> {/* Updated: text-gray-600 to text-gray-300 */}
+          </div>
+          <div style={{ height: '600px', position: 'relative' }}>
+            <FlowingMenu items={flowingMenuItems} />
+          </div>
+        </div>
+      </section>
+
+      {/* SERVICES */}
+      <section className="py-20 bg-gray-50 relative overflow-hidden">
+        {/* Optional: Subtle gradient overlay for modern depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 to-transparent pointer-events-none"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 relative after:absolute after:left-1/2 after:transform after:-translate-x-1/2 after:bottom-0 after:w-16 after:h-0.5 after:bg-gradient-to-r after:from-blue-500 after:to-purple-600">
+              Our Services
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              Comprehensive eye-care services tailored to your needs
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Eye, title: 'Eye Examinations', desc: 'State-of-the-art equipment for accurate prescriptions.', link: '/appointments', cta: 'Book now' },
-              { icon: Shield, title: 'Lens Care', desc: 'Professional cleaning, maintenance, and replacement.', link: '/services', cta: 'Learn more' },
-              { icon: Truck, title: 'Fast Delivery', desc: 'Free shipping on orders over $150 with express options.', link: '/shipping', cta: 'View options' }
+              { icon: Eye, title: 'Eye Examinations', desc: 'State-of-the-art equipment for accurate prescriptions.', link: '/appointments', cta: 'Book now', color: 'from-blue-500 to-blue-600' },
+              { icon: Shield, title: 'Lens Care', desc: 'Professional cleaning, maintenance, and replacement.', link: '/services', cta: 'Learn more', color: 'from-green-500 to-green-600' },
+              { icon: Truck, title: 'Fast Delivery', desc: 'Free shipping on orders over $150 with express options.', link: '/shipping', cta: 'View options', color: 'from-purple-500 to-purple-600' }
             ].map((service, i) => (
-              <div key={i} className="bg-white p-8 rounded-xl text-center hover:shadow-md transition-shadow">
-                <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <service.icon className="h-7 w-7 text-gray-700" />
+              <div 
+                key={i} 
+                className="group bg-white p-10 rounded-2xl text-center hover:shadow-xl hover:shadow-blue-100/50 transition-all duration-500 transform hover:scale-[1.02] border border-transparent hover:border-gradient-to-r hover:from-blue-100 hover:to-transparent relative overflow-hidden animate-fadeIn"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                {/* Icon Circle - Larger with gradient bg */}
+                <div className={`w-20 h-20 bg-gradient-to-r ${service.color} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg group-hover:shadow-xl transition-shadow`}>
+                  <service.icon className="h-8 w-8 text-white" />
                 </div>
-                <h3 className="text-xl font-light text-gray-900 mb-3">{service.title}</h3>
-                <p className="text-gray-600 mb-6 text-sm leading-relaxed">{service.desc}</p>
-                <Link to={service.link} className="text-sm font-light text-gray-900 hover:text-gray-700 flex items-center justify-center space-x-1">
+                
+                {/* Title - Bolder and larger */}
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4 group-hover:text-blue-600 transition-colors">
+                  {service.title}
+                </h3>
+                
+                {/* Description - Larger text, better spacing */}
+                <p className="text-gray-600 mb-8 text-base leading-relaxed">
+                  {service.desc}
+                </p>
+                
+                {/* CTA - Modern button style */}
+                <Link 
+                  to={service.link} 
+                  className="inline-flex items-center justify-center px-6 py-3 text-sm font-semibold text-gray-900 bg-transparent border-2 border-gray-200 rounded-full hover:bg-gradient-to-r hover:from-blue-50 hover:to-transparent hover:border-blue-300 hover:text-blue-600 transition-all duration-300 group-hover:underline underline-offset-4"
+                >
                   <span>{service.cta}</span>
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* NEW: Apple-Style Eyewear Collections Carousel */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16 animate-fadeIn">
+            <h2 className="text-3xl md:text-4xl font-bold text-neutral-800 dark:text-neutral-200 mb-4 font-sans">
+              Explore Our Collections
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto text-lg">
+              Dive into premium eyewear designs that blend style and function. Click to discover more.
+            </p>
+          </div>
+          <EyewearCardsCarouselDemo />
         </div>
       </section>
 

@@ -102,7 +102,8 @@ export function ServicesPage() {
 
   const openBookingFlow = () => {
     setShowBookingModal(true);
-    setBookingStep('location');
+    // Automatically skip to 'service' if location is already selected (fixes double selection)
+    setBookingStep(selectedLocation ? 'service' : 'location');
   };
 
   const handleLocationSelect = (location: StoreLocation) => {
@@ -261,7 +262,8 @@ export function ServicesPage() {
                   <img
                     src={location.image}
                     alt={location.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy" // Improved: Lazy loading for better performance
+                    className="w-full h-full object-cover group-hover:scale-105 group-hover:brightness-95 transition-all duration-500 ease-in-out" // Improved: Smoother hover effect with brightness
                   />
                 </div>
                 <div className="p-6">

@@ -1,30 +1,32 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Phone, CheckCircle, ChevronRight, Sparkles } from 'lucide-react';
+import { Calendar, Clock, MapPin, Phone, CheckCircle, ChevronRight, Sparkles, AlertCircle } from 'lucide-react';
+import { useServices } from '../hooks/useServices';
 
 export function AppointmentsPage() {
-  const services = [
-    {
-      id: 'eye-exam',
-      name: 'Comprehensive Eye Exam',
-      duration: '45 minutes',
-      price: '$120',
-      description: 'Complete eye health examination including vision testing and retinal evaluation.'
-    },
-    {
-      id: 'frame-selection',
-      name: 'Frame Selection & Styling',
-      duration: '30 minutes',
-      price: 'Complimentary',
-      description: 'Personalized frame selection with our expert stylists.'
-    },
-    {
-      id: 'contact-fitting',
-      name: 'Contact Lens Fitting',
-      duration: '60 minutes',
-      price: '$95',
-      description: 'Professional fitting with training on proper care and handling.'
-    }
-  ];
+  const { services, loading, error } = useServices(true); // Fetch only active services
+
+  const formatPrice = (price: number) => {
+    return price === 0 ? 'Complimentary' : `$${price}`;
+  };
+
+  const formatDuration = (minutes: number) => {
+    return `${minutes} minutes`;
+  };
+
+  // Load Calendly script
+  React.useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      const existingScript = document.querySelector('script[src="https://assets.calendly.com/assets/external/widget.js"]');
+      if (existingScript) {
+        document.body.removeChild(existingScript);
+      }
+    };
+  }, []);
 
   // Load Calendly script
   React.useEffect(() => {
@@ -108,28 +110,47 @@ export function AppointmentsPage() {
               {/* Services */}
               <div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-6">Available Services</h2>
-                <div className="space-y-4">
-                  {services.map((service) => (
-                    <div
-                      key={service.id}
-                      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-sm transition-all duration-200"
-                    >
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-medium text-lg text-gray-900">{service.name}</h3>
-                        <div className="text-right">
-                          <div className="font-semibold text-gray-900">{service.price}</div>
-                          <div className="text-xs text-gray-500 flex items-center justify-end mt-1">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {service.duration}
+                
+                {loading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  </div>
+                ) : error ? (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center space-x-2">
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                      <p className="text-red-700 font-light">Failed to load services</p>
+                    </div>
+                  </div>
+                ) : services.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 font-light">
+                    No services available at the moment
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {services.map((service) => (
+                      <div
+                        key={service._id}
+                        className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-sm transition-all duration-200"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <h3 className="font-medium text-lg text-gray-900">{service.serviceName}</h3>
+                          <div className="text-right">
+                            <div className="font-semibold text-gray-900">{formatPrice(service.price)}</div>
+                            <div className="text-xs text-gray-500 flex items-center justify-end mt-1">
+                              <Clock className="h-3 w-3 mr-1" />
+                              {formatDuration(service.duration)}
+                            </div>
                           </div>
                         </div>
+                        <p className="text-sm text-gray-600 font-light leading-relaxed">
+                          {service.description}
+                        </p>
                       </div>
-                      <p className="text-sm text-gray-600 font-light leading-relaxed">
-                        {service.description}
-                      </p>
-                    </div>
-                  ))}
+                    ))
+                  }
                 </div>
+                )}
               </div>
 
               {/* Contact Info */}

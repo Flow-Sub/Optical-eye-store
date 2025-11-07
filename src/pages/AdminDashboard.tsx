@@ -6,6 +6,9 @@ import { CreateProductModal } from './CreateProductModal';
 import { deleteProduct } from '../services/airtable';
 import { AppointmentsView } from './AppointmentsView';
 import { OrdersView } from './OrdersView';
+import { Settings } from 'lucide-react';
+import { ServicesManagementView } from './ServicesManagementView';
+import { TeamManagementView } from './TeamManagementView';
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -224,6 +227,8 @@ export function AdminDashboard() {
           <TabButton id="inventory" label="Inventory" icon={Package} />
           <TabButton id="orders" label="Orders" icon={ShoppingCart} />
           <TabButton id="appointments" label="Appointments" icon={Calendar} />
+          <TabButton id="services" label="Services" icon={Settings} />
+          <TabButton id="team" label="Team" icon={Users} />
         </div>
 
         {/* Content based on active tab */}
@@ -442,6 +447,10 @@ export function AdminDashboard() {
         )}
 
         {activeTab === 'appointments' && <AppointmentsView />}
+
+        {activeTab === 'services' && <ServicesManagementView />}
+
+        {activeTab === 'team' && <TeamManagementView />}
 
         {activeTab === 'orders' && <OrdersView />}
 

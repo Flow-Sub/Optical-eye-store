@@ -1,12 +1,9 @@
 import React from 'react';
-import { Eye, Award, Users, Heart, Clock, MapPin, Phone, Mail, Calendar } from 'lucide-react';
+import { Eye, Award, Users, Heart, Clock, MapPin, Phone, Mail, Calendar, AlertCircle, User } from 'lucide-react';
+import { useTeamMembers } from '../hooks/useTeamMembers';
 
 export function AboutPage() {
-  const team = [
-    { name: 'Dr. Sarah Johnson', role: 'Lead Optometrist', experience: '15+ years', specialties: ['Comprehensive Eye Care', 'Contact Lens Fitting', 'Pediatric Optometry'], image: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=600' },
-    { name: 'Dr. Michael Chen', role: 'Senior Optometrist', experience: '12+ years', specialties: ['Glaucoma Management', 'Diabetic Eye Care', 'Low Vision Rehabilitation'], image: 'https://images.pexels.com/photos/6749778/pexels-photo-6749778.jpeg?auto=compress&cs=tinysrgb&w=600' },
-    { name: 'Emily Rodriguez', role: 'Optical Manager', experience: '8+ years', specialties: ['Frame Styling', 'Lens Technology', 'Customer Service'], image: 'https://images.pexels.com/photos/5452201/pexels-photo-5452201.jpeg?auto=compress&cs=tinysrgb&w=600' }
-  ];
+  const { teamMembers, loading, error } = useTeamMembers(true); // Only active members
 
   const values = [
     { icon: Eye, title: 'Vision Excellence', description: 'We use the latest technology for accurate, comfortable vision.' },
@@ -116,31 +113,77 @@ export function AboutPage() {
         </div>
       </section>
 
-      {/* TEAM */}
+      {/* TEAM - Updated Section */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Meet Our Team</h2>
             <p className="text-gray-600 max-w-2xl mx-auto">Dedicated professionals delivering the best eye care</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {team.map((m, i) => (
-              <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <img src={m.image} alt={m.name} className="w-full h-64 object-cover" />
-                <div className="p-6">
-                  <h3 className="text-xl font-light text-gray-900 mb-1">{m.name}</h3>
-                  <p className="text-gray-600 mb-2">{m.role}</p>
-                  <p className="text-sm text-gray-500 mb-4">{m.experience} experience</p>
-                  <div className="space-y-1">
-                    <p className="text-sm font-light text-gray-900">Specialties:</p>
-                    {m.specialties.map((s, idx) => (
-                      <p key={idx} className="text-sm text-gray-600">• {s}</p>
-                    ))}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                <p className="text-gray-600 font-light">Loading team...</p>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-8 text-center max-w-md mx-auto">
+              <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
+              <p className="text-red-700 font-light">Failed to load team members</p>
+            </div>
+          ) : teamMembers.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 font-light">
+              No team members available at the moment
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {teamMembers.map((member, i) => (
+                <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow group">
+                  {/* Image */}
+                  <div className="relative h-72 bg-gray-100 overflow-hidden">
+                    {member.image ? (
+                      <img 
+                        src={member.image} 
+                        alt={member.name} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <User className="h-20 w-20 text-gray-300" />
+                      </div>
+                    )}
+                    {/* Overlay on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-xl font-light text-gray-900 mb-1">{member.name}</h3>
+                    <p className="text-gray-600 mb-2">{member.designation}</p>
+                    
+                    {member.experience && (
+                      <p className="text-sm text-gray-500 mb-4">{member.experience} experience</p>
+                    )}
+
+                    {member.specialization && (
+                      <div className="space-y-1 mb-4">
+                        <p className="text-sm font-light text-gray-900">Specialization:</p>
+                        <p className="text-sm text-gray-600">• {member.specialization}</p>
+                      </div>
+                    )}
+
+                    {member.about && (
+                      <p className="text-sm text-gray-600 font-light leading-relaxed line-clamp-3">
+                        {member.about}
+                      </p>
+                    )}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 

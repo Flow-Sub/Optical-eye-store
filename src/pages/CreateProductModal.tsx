@@ -33,7 +33,12 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
 
   // Separate state for form inputs (comma-separated strings)
   const [featuresInput, setFeaturesInput] = useState('');
-  const [imagesInput, setImagesInput] = useState('');
+  // const [imagesInput, setImagesInput] = useState('');
+
+  // Add these to your state declarations (at the top of component)
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   // Single Product Form State
   const [formData, setFormData] = useState<Partial<Product>>({
@@ -70,8 +75,8 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
     try {
       // Parse features from comma-separated input
       const features = featuresInput ? featuresInput.split(',').map((f: string) => f.trim()).filter(Boolean) : [];
-      // Parse images from comma-separated input
-      const images = imagesInput ? imagesInput.split(',').map((url: string) => url.trim()).filter(Boolean) : ['https://via.placeholder.com/500'];
+      // Parse images from uploaded images
+      const images = uploadedImages.length > 0 ? uploadedImages : ['https://via.placeholder.com/500'];
       
       await createProduct({ ...formData, features, images });
       onSuccess();
@@ -205,6 +210,11 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
       images: ['https://via.placeholder.com/500'],
       isActive: true
     });
+    // Add these resets:
+    setUploadedImages([]);
+    setImagePreviews([]);
+    setUploadingImages(false);
+    setFeaturesInput('');
     onClose();
   };
 
@@ -376,20 +386,105 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                 />
               </div>
 
-              {/* Images */}
+              {/* Images Upload */}
               <div>
                 <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                   <ImageIcon className="h-4 w-4" />
-                  <span>Images (comma-separated URLs)</span>
+                  <span>Product Images</span>
                 </label>
-                <input
-                  type="text"
-                  value={imagesInput}
-                  onChange={(e) => setImagesInput(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
-                  placeholder="e.g., https://example.com/img1.jpg, https://example.com/img2.jpg"
-                />
-                <p className="text-xs text-gray-500 mt-1">First URL is the primary image. Fallback to placeholder if empty.</p>
+                
+                {/* Upload Button */}
+                <div className="space-y-3">
+                  <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer">
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <Upload className="h-4 w-4" />
+                      <span className="font-light text-sm">
+                        {uploadingImages ? 'Uploading...' : 'Choose images'}
+                      </span>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={async (e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length === 0) return;
+
+                        setUploadingImages(true);
+                        const newUrls: string[] = [];
+                        const newPreviews: string[] = [];
+
+                        for (const file of files) {
+                          // Create preview
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            newPreviews.push(reader.result as string);
+                            setImagePreviews(prev => [...prev, reader.result as string]);
+                          };
+                          reader.readAsDataURL(file);
+
+                          // Upload to S3
+                          try {
+                            const uploadFormData = new FormData();
+                            uploadFormData.append('image', file);
+
+                            const response = await fetch(`http://134.209.6.174:3000/api/digitalOceanRoutes/uploadImage`, {
+                              method: 'POST',
+                              body: uploadFormData,
+                            });
+
+                            const result = await response.json();
+
+                            if (result.success && result.data?.url) {
+                              newUrls.push(result.data.url);
+                            } else {
+                              alert(`Failed to upload ${file.name}`);
+                            }
+                          } catch (error) {
+                            console.error('Image upload error:', error);
+                            alert(`Failed to upload ${file.name}`);
+                          }
+                        }
+
+                        setUploadedImages(prev => [...prev, ...newUrls]);
+                        setUploadingImages(false);
+                      }}
+                      disabled={uploadingImages}
+                      className="hidden"
+                    />
+                  </label>
+
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="grid grid-cols-4 gap-3">
+                      {imagePreviews.map((preview, index) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`Product ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border border-gray-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setImagePreviews(prev => prev.filter((_, i) => i !== index));
+                              setUploadedImages(prev => prev.filter((_, i) => i !== index));
+                            }}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="text-xs text-gray-500">
+                    {uploadedImages.length > 0 
+                      ? `✅ ${uploadedImages.length} image(s) uploaded successfully`
+                      : 'Upload product images (first image will be primary)'}
+                  </p>
+                </div>
               </div>
 
               {/* Active Status */}

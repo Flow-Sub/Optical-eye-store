@@ -114,9 +114,10 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
 
   // Bulk: Download Template
   const downloadTemplate = () => {
-    const csvContent = `Product Name,Brand,Category,Price,Description,Stock Quantity,Lens Compatible,Features,Images
-Classic Black Frame,Ray-Ban,frames,89.99,A timeless design for everyday wear,50,Yes,Lightweight,UV Protection,Anti-Scratch,https://example.com/black-frame1.jpg,https://example.com/black-frame2.jpg
-Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized lenses,25,No,Polarized,Metal Frame,https://example.com/aviator1.jpg`;
+    const csvContent = `Product Name,Brand,Category,Price,Description,Stock Quantity,Lens Compatible,Features,Images,Allowed Lens Options,Allowed Coating Options
+  Classic Black Frame,Ray-Ban,frames,89.99,A timeless design for everyday wear,50,Yes,"Lightweight,UV Protection,Anti-Scratch","https://example.com/black-frame1.jpg,https://example.com/black-frame2.jpg",rec123abc|rec456def,recAAA111|recBBB222
+  Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized lenses,25,No,"Polarized,Metal Frame",https://example.com/aviator1.jpg,,
+  Round Vintage Frames,Gucci,frames,199.99,Retro-inspired round frames,30,Yes,"Acetate Frame,Spring Hinges",https://example.com/round1.jpg,rec123abc,recAAA111|recBBB222`;
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -125,7 +126,6 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
     a.click();
     window.URL.revokeObjectURL(url);
   };
-
   // Bulk: Handle File Upload & Parse
   const handleFileUpload = (selectedFile: File) => {
     setFile(selectedFile);
@@ -140,40 +140,53 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
         const invalid: { row: Partial<Product>; error: string }[] = [];
 
         dataRows.forEach((row: Record<string, string>, index: number) => {
-          const rowNum = index + 2;
-          const product: Partial<Product> = {
-            name: row['Product Name']?.trim() || '',
-            brand: row['Brand']?.trim() || '',
-            category: (row['Category']?.trim()?.toLowerCase() === 'sunglasses' || row['Category']?.trim()?.toLowerCase() === 'accessories' ? row['Category']?.trim()?.toLowerCase() : 'frames') as 'frames' | 'sunglasses' | 'accessories',
-            price: parseFloat(row['Price'] ?? '0') || 0,
-            description: row['Description']?.trim() || '',
-            stock: parseInt(row['Stock Quantity'] ?? '0') || 0,
-            lensCompatible: row['Lens Compatible']?.trim().toLowerCase() === 'yes',
-            features: row['Features'] 
-              ? row['Features'].split(',').map((f: string) => f.trim()).filter(Boolean)
-              : [],
-            images: row['Images'] 
-              ? row['Images'].split(',').map((url: string) => url.trim()).filter(Boolean)
-              : ['https://via.placeholder.com/500'],
-            isActive: true
-          };
+        const rowNum = index + 2;
+        const product: Partial<Product> = {
+          name: row['Product Name']?.trim() || '',
+          brand: row['Brand']?.trim() || '',
+          category: (row['Category']?.trim()?.toLowerCase() === 'sunglasses' || row['Category']?.trim()?.toLowerCase() === 'accessories' ? row['Category']?.trim()?.toLowerCase() : 'frames') as 'frames' | 'sunglasses' | 'accessories',
+          price: parseFloat(row['Price'] ?? '0') || 0,
+          description: row['Description']?.trim() || '',
+          stock: parseInt(row['Stock Quantity'] ?? '0') || 0,
+          lensCompatible: row['Lens Compatible']?.trim().toLowerCase() === 'yes',
+          features: row['Features'] 
+            ? row['Features'].split(',').map((f: string) => f.trim()).filter(Boolean)
+            : [],
+          images: row['Images'] 
+            ? row['Images'].split(',').map((url: string) => url.trim()).filter(Boolean)
+            : [],
+          // ✅ NEW: Parse lens options (pipe-separated Airtable record IDs)
+          allowedLensOptions: row['Allowed Lens Options']
+            ? row['Allowed Lens Options'].split('|').map((id: string) => id.trim()).filter(Boolean)
+            : [],
+          // ✅ NEW: Parse coating options (pipe-separated Airtable record IDs)
+          allowedCoatingOptions: row['Allowed Coating Options']
+            ? row['Allowed Coating Options'].split('|').map((id: string) => id.trim()).filter(Boolean)
+            : [],
+          isActive: true
+        };
 
-          const errors: string[] = [];
-          if (!product.name) errors.push('Missing Product Name');
-          if (!product.brand) errors.push('Missing Brand');
-          if (!product.category) errors.push('Missing Category');
-          if ((product.price ?? 0) <= 0) errors.push('Invalid Price');
-          if ((product.stock ?? 0) < 0) errors.push('Invalid Stock Quantity');
-          if (!product.images || product.images.length === 0 || !(product.images[0]?.startsWith('http'))) {
-            errors.push('Missing or invalid Images (comma-separated URLs required)');
-          }
+        const errors: string[] = [];
+        if (!product.name) errors.push('Missing Product Name');
+        if (!product.brand) errors.push('Missing Brand');
+        if (!product.category) errors.push('Missing Category');
+        if ((product.price ?? 0) <= 0) errors.push('Invalid Price');
+        if ((product.stock ?? 0) < 0) errors.push('Invalid Stock Quantity');
+        // ✅ UPDATED: Relaxed image validation (allow empty for placeholder fallback)
+        if (row['Images'] && product.images && product.images.length > 0 && !(product.images[0]?.startsWith('http'))) {
+          errors.push('Invalid Images (must be comma-separated URLs)');
+        }
+        // ✅ NEW: Validate lens/coating logic
+        if (product.lensCompatible && product.allowedLensOptions && product.allowedLensOptions.length === 0) {
+          errors.push('Lens Compatible=Yes but no Allowed Lens Options provided (use pipe-separated IDs like rec123|rec456)');
+        }
 
-          if (errors.length > 0) {
-            invalid.push({ row: product, error: `Row ${rowNum}: ${errors.join(', ')}` });
-          } else {
-            valid.push(product);
-          }
-        });
+        if (errors.length > 0) {
+          invalid.push({ row: product, error: `Row ${rowNum}: ${errors.join(', ')}` });
+        } else {
+          valid.push(product);
+        }
+      });
 
         setParsedData({ valid, invalid });
         setStep('review');
@@ -698,9 +711,12 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                     </button>
                   </div>
                   <div className="text-xs text-gray-500 text-center">
-                    <p>Required columns: Product Name, Brand, Category, Price, Stock Quantity, Images (comma-separated URLs)</p>
-                    <p>Optional: Description, Lens Compatible (Yes/No), Features (comma-separated)</p>
+                    <p className="mb-1"><strong>Required:</strong> Product Name, Brand, Category, Price, Stock Quantity, Images (comma-separated URLs)</p>
+                    <p className="mb-1"><strong>Optional:</strong> Description, Lens Compatible (Yes/No), Features (comma-separated)</p>
+                    <p><strong>Lens/Coating IDs:</strong> Use pipe-separated Airtable record IDs (e.g., <code className="bg-gray-200 px-1 rounded">rec123abc|rec456def</code>)</p>
+                    <p className="text-amber-600 mt-2">💡 Get record IDs from Admin → Lens Options tab (copy from URL or table)</p>
                   </div>
+
                 </div>
               )}
 

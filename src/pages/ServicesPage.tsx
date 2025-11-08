@@ -2,70 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Clock, Users, Award, CheckCircle, Calendar, Phone, MapPin, ChevronRight, Sparkles, Shield, Star, ArrowRight, Check } from 'lucide-react';
 import { createAppointment } from '../services/airtable';
-
-interface StoreLocation {
-  id: string;
-  name: string;
-  address: string;
-  phone: string;
-  hours: string;
-  image: string;
-  calendlyUrl: string;
-}
-
-declare global {
-  interface Window {
-    Calendly: {
-      initPopupWidget: (options: {
-        url: string;
-        prefill?: {
-          name?: string;
-          email?: string;
-          customAnswers?: Record<string, string>;
-        };
-      }) => void;
-    };
-  }
-}
-
-const storeLocations: StoreLocation[] = [
-  {
-    id: 'manhattan',
-    name: 'Manhattan Flagship',
-    address: '123 Fifth Avenue, New York, NY 10001',
-    phone: '(212) 555-0101',
-    hours: 'Mon-Sat: 9AM-8PM, Sun: 10AM-6PM',
-    image: 'https://antdisplay.com/pub/media/magefan_blog/4_1_3.jpg',
-    calendlyUrl: 'https://calendly.com/eyeoptical007/eye-care-appointment-1'
-  },
-  {
-    id: 'brooklyn',
-    name: 'Brooklyn Heights',
-    address: '456 Court Street, Brooklyn, NY 11231',
-    phone: '(718) 555-0202',
-    hours: 'Mon-Sat: 9AM-7PM, Sun: 11AM-5PM',
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrOEoKkJZTc-aa_taK0LB9H21kbFwTUQht8w&s',
-    calendlyUrl: 'https://calendly.com/eyeoptical007/brooklyn-appointment'
-  },
-  {
-    id: 'queens',
-    name: 'Queens Center',
-    address: '789 Queens Blvd, Queens, NY 11374',
-    phone: '(718) 555-0303',
-    hours: 'Mon-Sat: 10AM-8PM, Sun: 10AM-6PM',
-    image: 'https://i.pinimg.com/originals/3e/c1/41/3ec141fb4407ad0d429a23247f899adb.jpg',
-    calendlyUrl: 'https://calendly.com/eyeoptical007/queens-appointment'
-  },
-  {
-    id: 'bronx',
-    name: 'Bronx Plaza',
-    address: '321 Fordham Road, Bronx, NY 10458',
-    phone: '(718) 555-0404',
-    hours: 'Mon-Sat: 9AM-7PM, Sun: 11AM-5PM',
-    image: 'https://d3995ea24pmi7m.cloudfront.net/media/stores/store-images/TDRA/mobile/TDRA_2.webp',
-    calendlyUrl: 'https://calendly.com/eyeoptical007/bronx-appointment'
-  }
-];
+import { useStoreLocations } from '../hooks/useStoreLocations';
+import { StoreLocation } from '../types'; // Adjust path
 
 export function ServicesPage() {
   const [selectedLocation, setSelectedLocation] = useState<StoreLocation | null>(null);
@@ -100,6 +38,21 @@ export function ServicesPage() {
     };
   }, []);
 
+  // NEW: Fetch dynamic locations
+  const { locations, loading: locationsLoading } = useStoreLocations();
+
+  // If loading, show spinner
+  if (locationsLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center pt-28">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-light">Loading locations...</p>
+        </div>
+      </div>
+    );
+  }
+
   // FIXED: Open booking flow - skip location if already selected
   const openBookingFlow = (location?: StoreLocation) => {
     if (location) {
@@ -126,7 +79,7 @@ export function ServicesPage() {
     
     if (window.Calendly) {
       window.Calendly.initPopupWidget({
-        url: selectedLocation.calendlyUrl
+        url: selectedLocation.calendlyUrl // ✅ Dynamic
       });
     }
   };
@@ -270,14 +223,14 @@ export function ServicesPage() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {storeLocations.map((location) => (
+            {locations.map((location) => (
               <div
                 key={location.id}
                 className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="aspect-[4/3] overflow-hidden relative">
                   <img
-                    src={location.image}
+                    src={location.image || 'https://via.placeholder.com/400x300?text=No+Image'}  // Fallback
                     alt={location.name}
                     loading="lazy"
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -450,7 +403,7 @@ export function ServicesPage() {
                 <div className="animate-fadeIn">
                   <h3 className="text-2xl font-light text-gray-900 mb-8">Choose Your Location</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {storeLocations.map((location) => (
+                    {locations.map((location) => (
                       <div
                         key={location.id}
                         onClick={() => handleLocationSelect(location)}

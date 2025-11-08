@@ -9,6 +9,12 @@ import { OrdersView } from './OrdersView';
 import { Settings } from 'lucide-react';
 import { ServicesManagementView } from './ServicesManagementView';
 import { TeamManagementView } from './TeamManagementView';
+import { Shield } from 'lucide-react';
+import { CreateLensOptionsModal } from './CreateLensOptionModal';
+import { CreateCoatingOptionsModal } from './CreateCoatingOptionModal';
+import { MapPin } from 'lucide-react';
+import { useStoreLocations } from '../hooks/useStoreLocations';
+import { StoreLocationsManagementView } from './StoreLocationsManagementView';
 
 export function AdminDashboard() {
   const { user } = useAuth();
@@ -18,6 +24,10 @@ export function AdminDashboard() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isLocationsModalOpen, setIsLocationsModalOpen] = useState(false);
+
+  const [isLensModalOpen, setIsLensModalOpen] = useState(false);
+  const [isCoatingModalOpen, setIsCoatingModalOpen] = useState(false);
 
   const handleDeleteProduct = async () => {
     if (!productToDelete) return;
@@ -229,6 +239,8 @@ export function AdminDashboard() {
           <TabButton id="appointments" label="Appointments" icon={Calendar} />
           <TabButton id="services" label="Services" icon={Settings} />
           <TabButton id="team" label="Team" icon={Users} />
+          <TabButton id="lens-options" label="Lens Options" icon={Eye} />
+          <TabButton id="locations" label="Locations" icon={MapPin} />
         </div>
 
         {/* Content based on active tab */}
@@ -446,6 +458,65 @@ export function AdminDashboard() {
           </>
         )}
 
+        {activeTab === 'lens-options' && (
+          <div className="bg-white rounded-xl border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Lens & Coating Options</h2>
+                <p className="text-gray-600 font-light mt-1">Manage prescription lens types and coating options</p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setIsLensModalOpen(true)}
+                  className="flex items-center space-x-2 px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-light transition-colors"
+                >
+                  <Eye className="h-4 w-4" />
+                  <span>Manage Lens Options</span>
+                </button>
+                <button
+                  onClick={() => setIsCoatingModalOpen(true)}
+                  className="flex items-center space-x-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 font-light transition-colors"
+                >
+                  <Shield className="h-4 w-4" />
+                  <span>Manage Coatings</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Lens Options Summary */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">Lens Options</h3>
+                  <Eye className="h-5 w-5 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-600 mb-4">Configure prescription lens types and pricing</p>
+                <button
+                  onClick={() => setIsLensModalOpen(true)}
+                  className="text-sm text-gray-900 hover:underline"
+                >
+                  View all lens options →
+                </button>
+              </div>
+
+              {/* Coating Options Summary */}
+              <div className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-medium text-gray-900">Coating Options</h3>
+                  <Shield className="h-5 w-5 text-gray-400" />
+                </div>
+                <p className="text-sm text-gray-600 mb-4">Manage lens coating treatments and add-ons</p>
+                <button
+                  onClick={() => setIsCoatingModalOpen(true)}
+                  className="text-sm text-gray-900 hover:underline"
+                >
+                  View all coating options →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'appointments' && <AppointmentsView />}
 
         {activeTab === 'services' && <ServicesManagementView />}
@@ -454,10 +525,34 @@ export function AdminDashboard() {
 
         {activeTab === 'orders' && <OrdersView />}
 
+        {activeTab === 'locations' && (
+          <StoreLocationsManagementView 
+            onSuccess={() => refetch()} // Refresh products if needed, or add locations refetch
+          />
+        )}
+
         <CreateProductModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={refetch}
+        />
+
+        <CreateLensOptionsModal
+          isOpen={isLensModalOpen}
+          onClose={() => setIsLensModalOpen(false)}
+          onSuccess={() => {
+            // Optionally refresh data
+            refetch();
+          }}
+        />
+
+        <CreateCoatingOptionsModal
+          isOpen={isCoatingModalOpen}
+          onClose={() => setIsCoatingModalOpen(false)}
+          onSuccess={() => {
+            // Optionally refresh data
+            refetch();
+          }}
         />
       </div>
     </div>

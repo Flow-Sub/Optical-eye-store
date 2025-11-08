@@ -15,11 +15,13 @@ import {
   DollarSign,
   Hash,
   CheckSquare,
-  Square,
-  Sparkles // Added for features label
+  Shield,
+  Sparkles
 } from 'lucide-react';
 import { Product } from '../types';
 import { createProduct, batchCreateProducts } from '../services/airtable';
+import { useLensOptions } from '../hooks/useLensOptions';
+import { useCoatingOptions } from '../hooks/useCoatingOptions';
 
 interface CreateProductModalProps {
   isOpen: boolean;
@@ -30,12 +32,15 @@ interface CreateProductModalProps {
 export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProductModalProps) {
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
   const [loading, setLoading] = useState(false);
+  
+  // Lens and Coating selections
+  const [selectedLensOptions, setSelectedLensOptions] = useState<string[]>([]);
+  const [selectedCoatingOptions, setSelectedCoatingOptions] = useState<string[]>([]);
 
   // Separate state for form inputs (comma-separated strings)
   const [featuresInput, setFeaturesInput] = useState('');
-  // const [imagesInput, setImagesInput] = useState('');
 
-  // Add these to your state declarations (at the top of component)
+  // Image upload states
   const [uploadingImages, setUploadingImages] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -64,10 +69,14 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
   const [importResult, setImportResult] = useState<{ success: number; errors: string[] }>({ success: 0, errors: [] });
   const [uploading, setUploading] = useState(false);
 
+  // Load lens and coating options
+  const { lensOptions, loading: lensLoading } = useLensOptions();
+  const { coatingOptions, loading: coatingLoading } = useCoatingOptions();
+
   // Single Product: Handle Form Submit
   const handleSingleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.brand || (formData.price ?? 0) <= 0) { // Fixed: ?? for undefined
+    if (!formData.name || !formData.brand || (formData.price ?? 0) <= 0) {
       alert('Please fill required fields (Name, Brand, Price).');
       return;
     }
@@ -78,7 +87,15 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
       // Parse images from uploaded images
       const images = uploadedImages.length > 0 ? uploadedImages : ['https://via.placeholder.com/500'];
       
-      await createProduct({ ...formData, features, images });
+      // Create product with lens and coating options
+      await createProduct({ 
+        ...formData, 
+        features, 
+        images,
+        allowedLensOptions: selectedLensOptions,
+        allowedCoatingOptions: selectedCoatingOptions
+      });
+      
       onSuccess();
       onClose();
     } catch (error) {
@@ -89,7 +106,7 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
   };
 
   // Single: Update Form Data Helper
-  const updateFormData = <K extends keyof Partial<Product>>(key: K, value: Partial<Product>[K]) => { // Fixed: Generic for better typing
+  const updateFormData = <K extends keyof Partial<Product>>(key: K, value: Partial<Product>[K]) => {
     setFormData(prev => ({ ...prev, [key]: value }));
   };
 
@@ -113,28 +130,28 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
     setUploading(true);
 
     Papa.parse(selectedFile, {
-      header: true, // Skips row 1 (headers)
+      header: true,
       skipEmptyLines: true,
       complete: (results: Papa.ParseResult<Record<string, string>>) => {
         const dataRows = results.data;
         const valid: Partial<Product>[] = [];
         const invalid: { row: Partial<Product>; error: string }[] = [];
 
-        dataRows.forEach((row: Record<string, string>, index: number) => { // Fixed: Typed row & index
+        dataRows.forEach((row: Record<string, string>, index: number) => {
           const rowNum = index + 2;
           const product: Partial<Product> = {
             name: row['Product Name']?.trim() || '',
             brand: row['Brand']?.trim() || '',
             category: (row['Category']?.trim()?.toLowerCase() === 'sunglasses' || row['Category']?.trim()?.toLowerCase() === 'accessories' ? row['Category']?.trim()?.toLowerCase() : 'frames') as 'frames' | 'sunglasses' | 'accessories',
-            price: parseFloat(row['Price'] ?? '0') || 0, // Fixed: ?? for undefined
+            price: parseFloat(row['Price'] ?? '0') || 0,
             description: row['Description']?.trim() || '',
-            stock: parseInt(row['Stock Quantity'] ?? '0') || 0, // Fixed: ?? for undefined
+            stock: parseInt(row['Stock Quantity'] ?? '0') || 0,
             lensCompatible: row['Lens Compatible']?.trim().toLowerCase() === 'yes',
             features: row['Features'] 
-              ? row['Features'].split(',').map((f: string) => f.trim()).filter(Boolean) // Fixed: Typed param
+              ? row['Features'].split(',').map((f: string) => f.trim()).filter(Boolean)
               : [],
             images: row['Images'] 
-              ? row['Images'].split(',').map((url: string) => url.trim()).filter(Boolean) // Fixed: Typed param
+              ? row['Images'].split(',').map((url: string) => url.trim()).filter(Boolean)
               : ['https://via.placeholder.com/500'],
             isActive: true
           };
@@ -143,9 +160,9 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
           if (!product.name) errors.push('Missing Product Name');
           if (!product.brand) errors.push('Missing Brand');
           if (!product.category) errors.push('Missing Category');
-          if ((product.price ?? 0) <= 0) errors.push('Invalid Price'); // Fixed: ?? 
-          if ((product.stock ?? 0) < 0) errors.push('Invalid Stock Quantity'); // Fixed: ??
-          if (!product.images || product.images.length === 0 || !(product.images[0]?.startsWith('http'))) { // Fixed: ?.
+          if ((product.price ?? 0) <= 0) errors.push('Invalid Price');
+          if ((product.stock ?? 0) < 0) errors.push('Invalid Stock Quantity');
+          if (!product.images || product.images.length === 0 || !(product.images[0]?.startsWith('http'))) {
             errors.push('Missing or invalid Images (comma-separated URLs required)');
           }
 
@@ -178,7 +195,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
       const result = await batchCreateProducts(parsedData.valid);
       setImportResult(result);
       setStep('complete');
-      onSuccess(); // Refetch
+      onSuccess();
     } catch (error) {
       setImportResult({ success: 0, errors: [`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`] });
       setStep('complete');
@@ -210,11 +227,12 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
       images: ['https://via.placeholder.com/500'],
       isActive: true
     });
-    // Add these resets:
     setUploadedImages([]);
     setImagePreviews([]);
     setUploadingImages(false);
     setFeaturesInput('');
+    setSelectedLensOptions([]);
+    setSelectedCoatingOptions([]);
     onClose();
   };
 
@@ -224,7 +242,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
           <h3 className="text-xl font-semibold text-gray-900">Add Products</h3>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
             <X className="h-5 w-5" />
@@ -260,7 +278,6 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
         {/* Content */}
         <div className="p-6">
           {activeTab === 'single' && (
-            // Full Single Product Form
             <form onSubmit={handleSingleSubmit} className="space-y-6">
               {/* Product Name */}
               <div>
@@ -270,7 +287,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                 </label>
                 <input
                   type="text"
-                  value={formData.name ?? ''} // Fixed: ?? default
+                  value={formData.name ?? ''}
                   onChange={(e) => updateFormData('name', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
                   placeholder="e.g., Classic Black Frame"
@@ -286,7 +303,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                 </label>
                 <input
                   type="text"
-                  value={formData.brand ?? ''} // Fixed: ?? default
+                  value={formData.brand ?? ''}
                   onChange={(e) => updateFormData('brand', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
                   placeholder="e.g., Ray-Ban"
@@ -301,8 +318,8 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                   <span>Category</span>
                 </label>
                 <select
-                  value={formData.category ?? 'frames'} // Fixed: ?? default
-                  onChange={(e) => updateFormData('category', e.target.value as 'frames' | 'sunglasses' | 'accessories')} // Fixed: Type assertion
+                  value={formData.category ?? 'frames'}
+                  onChange={(e) => updateFormData('category', e.target.value as 'frames' | 'sunglasses' | 'accessories')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
                 >
                   <option value="frames">Frames</option>
@@ -320,7 +337,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                 <input
                   type="number"
                   step="0.01"
-                  value={formData.price ?? 0} // Fixed: ?? default
+                  value={formData.price ?? 0}
                   onChange={(e) => updateFormData('price', parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
                   placeholder="e.g., 89.99"
@@ -333,7 +350,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
-                  value={formData.description ?? ''} // Fixed: ?? default
+                  value={formData.description ?? ''}
                   onChange={(e) => updateFormData('description', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
                   placeholder="Product description..."
@@ -349,7 +366,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                 </label>
                 <input
                   type="number"
-                  value={formData.stock ?? 0} // Fixed: ?? default
+                  value={formData.stock ?? 0}
                   onChange={(e) => updateFormData('stock', parseInt(e.target.value) || 0)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-gray-900"
                   placeholder="e.g., 50"
@@ -359,17 +376,135 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
 
               {/* Lens Compatible */}
               <div className="flex items-center space-x-3">
-                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                  <CheckSquare className={`h-4 w-4 ${(formData.lensCompatible ?? false) ? 'text-green-600' : 'text-gray-400'}`} />
-                  <span>Lens Compatible</span>
-                </label>
                 <input
                   type="checkbox"
-                  checked={formData.lensCompatible ?? false} // Fixed: ?? default
-                  onChange={(e) => updateFormData('lensCompatible', e.target.checked)}
+                  id="lensCompatible"
+                  checked={formData.lensCompatible ?? false}
+                  onChange={(e) => {
+                    updateFormData('lensCompatible', e.target.checked);
+                    // Clear selections if unchecked
+                    if (!e.target.checked) {
+                      setSelectedLensOptions([]);
+                      setSelectedCoatingOptions([]);
+                    }
+                  }}
                   className="h-4 w-4 text-gray-900 focus:ring-gray-900 border-gray-300 rounded"
                 />
+                <label htmlFor="lensCompatible" className="flex items-center space-x-2 text-sm font-medium text-gray-700 cursor-pointer">
+                  <Eye className={`h-4 w-4 ${(formData.lensCompatible ?? false) ? 'text-green-600' : 'text-gray-400'}`} />
+                  <span>Lens Compatible</span>
+                </label>
               </div>
+
+              {/* Lens Options Selection - Only show if lens compatible */}
+              {formData.lensCompatible && (
+                <>
+                  {/* Allowed Lens Options */}
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+                      <Eye className="h-4 w-4 text-gray-600" />
+                      <span>Allowed Lens Options</span>
+                      <span className="text-xs text-gray-500 font-normal">(Select which lens types customers can choose)</span>
+                    </label>
+                    
+                    {lensLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div>
+                      </div>
+                    ) : lensOptions.length === 0 ? (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No lens options available. Please add lens options first.
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-white">
+                        {lensOptions.map((option) => (
+                          <label key={option.id} className="flex items-start space-x-3 hover:bg-gray-50 p-2 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={option.id}
+                              checked={selectedLensOptions.includes(option.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedLensOptions([...selectedLensOptions, option.id]);
+                                } else {
+                                  setSelectedLensOptions(selectedLensOptions.filter(id => id !== option.id));
+                                }
+                              }}
+                              className="h-4 w-4 text-gray-900 border-gray-300 rounded mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-700">{option.name}</span>
+                                <span className="text-sm text-gray-600">${option.price.toFixed(2)}</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">{option.description}</p>
+                              <span className="inline-block px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded mt-1">
+                                {option.type}
+                              </span>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {selectedLensOptions.length > 0 && (
+                      <p className="text-xs text-green-600 mt-2">
+                        ✓ {selectedLensOptions.length} lens option(s) selected
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Allowed Coating Options */}
+                  <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-3">
+                      <Shield className="h-4 w-4 text-gray-600" />
+                      <span>Allowed Coating Options</span>
+                      <span className="text-xs text-gray-500 font-normal">(Select which coatings customers can add)</span>
+                    </label>
+                    
+                    {coatingLoading ? (
+                      <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div>
+                      </div>
+                    ) : coatingOptions.length === 0 ? (
+                      <div className="text-sm text-gray-500 text-center py-4">
+                        No coating options available. Please add coating options first.
+                      </div>
+                    ) : (
+                      <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3 bg-white">
+                        {coatingOptions.map((option) => (
+                          <label key={option.id} className="flex items-start space-x-3 hover:bg-gray-50 p-2 rounded cursor-pointer">
+                            <input
+                              type="checkbox"
+                              value={option.id}
+                              checked={selectedCoatingOptions.includes(option.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedCoatingOptions([...selectedCoatingOptions, option.id]);
+                                } else {
+                                  setSelectedCoatingOptions(selectedCoatingOptions.filter(id => id !== option.id));
+                                }
+                              }}
+                              className="h-4 w-4 text-gray-900 border-gray-300 rounded mt-0.5"
+                            />
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-gray-700">{option.name}</span>
+                                <span className="text-sm text-gray-600">+${option.price.toFixed(2)}</span>
+                              </div>
+                              <p className="text-xs text-gray-500 mt-1">{option.description}</p>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
+                    )}
+                    {selectedCoatingOptions.length > 0 && (
+                      <p className="text-xs text-green-600 mt-2">
+                        ✓ {selectedCoatingOptions.length} coating option(s) selected
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
 
               {/* Features */}
               <div>
@@ -393,7 +528,6 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                   <span>Product Images</span>
                 </label>
                 
-                {/* Upload Button */}
                 <div className="space-y-3">
                   <label className="flex items-center justify-center w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors cursor-pointer">
                     <div className="flex items-center space-x-2 text-gray-600">
@@ -489,18 +623,20 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
 
               {/* Active Status */}
               <div className="flex items-center space-x-3">
-                <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                  <CheckSquare className={`h-4 w-4 ${(formData.isActive ?? true) ? 'text-green-600' : 'text-gray-400'}`} />
-                  <span>Active</span>
-                </label>
                 <input
                   type="checkbox"
-                  checked={formData.isActive ?? true} // Fixed: ?? default
+                  id="isActive"
+                  checked={formData.isActive ?? true}
                   onChange={(e) => updateFormData('isActive', e.target.checked)}
                   className="h-4 w-4 text-gray-900 focus:ring-gray-900 border-gray-300 rounded"
                 />
+                <label htmlFor="isActive" className="flex items-center space-x-2 text-sm font-medium text-gray-700 cursor-pointer">
+                  <CheckSquare className={`h-4 w-4 ${(formData.isActive ?? true) ? 'text-green-600' : 'text-gray-400'}`} />
+                  <span>Active</span>
+                </label>
               </div>
 
+              {/* Submit Buttons */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
@@ -521,6 +657,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
             </form>
           )}
 
+          {/* Bulk Import Tab Content */}
           {activeTab === 'bulk' && (
             <div className="space-y-6">
               {step === 'upload' && (

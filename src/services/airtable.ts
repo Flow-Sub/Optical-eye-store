@@ -60,6 +60,8 @@ const mapAirtableToProduct = (record: any): Product => {
               : []))
       : [],
     lensCompatible: fields['Lens Compatible'] || false,
+    allowedLensOptions: fields['Allowed Lens Options'] || [],  // Array of record IDs
+    allowedCoatingOptions: fields['Allowed Coating Options'] || [],
   };
 };
 
@@ -107,6 +109,8 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
         'Features': JSON.stringify(productData.features || []),
         'Image': JSON.stringify(productData.images || []), // ✅ Store URLs as JSON
         'Active Status': true,
+        'Allowed Lens Options': productData.allowedLensOptions || [],
+        'Allowed Coating Options': productData.allowedCoatingOptions || [],
       },
       { typecast: true }
     );
@@ -507,5 +511,279 @@ export const fetchOrdersByEmail = async (email: string): Promise<Order[]> => {
   } catch (error) {
     console.error('Error fetching user orders:', error);
     throw new Error('Failed to fetch orders');
+  }
+};
+
+// ============= LENS OPTIONS =============
+const LENS_OPTIONS_TABLE = import.meta.env.VITE_AIRTABLE_LENS_OPTIONS_TABLE || 'Lens Options';
+
+export interface LensOption {
+  id: string;
+  name: string;
+  type: 'single-vision' | 'bifocal' | 'progressive';
+  price: number;
+  description: string;
+  isActive: boolean;
+}
+
+const mapAirtableToLensOption = (record: any): LensOption => {
+  const fields = record.fields;
+  return {
+    id: record.id,
+    name: fields['Name'] || '',
+    type: fields['Type'] || 'single-vision',
+    price: parseFloat(fields['Price']) || 0,
+    description: fields['Description'] || '',
+    isActive: fields['IsActive'] !== false,
+  };
+};
+
+// Fetch all active lens options
+export const fetchLensOptions = async (): Promise<LensOption[]> => {
+  try {
+    const records = await base(LENS_OPTIONS_TABLE)
+      .select({
+        filterByFormula: '{IsActive} = TRUE()',
+        sort: [{ field: 'Price', direction: 'asc' }],
+      })
+      .all();
+
+    return records.map(mapAirtableToLensOption);
+  } catch (error) {
+    console.error('Error fetching lens options:', error);
+    throw new Error('Failed to fetch lens options');
+  }
+};
+
+// Create lens option (admin)
+export const createLensOption = async (data: Partial<LensOption>): Promise<LensOption> => {
+  try {
+    const record = await base(LENS_OPTIONS_TABLE).create(
+      {
+        'Name': data.name,
+        'Type': data.type,
+        'Price': data.price,
+        'Description': data.description,
+        'IsActive': data.isActive !== false,
+      },
+      { typecast: true }
+    );
+    return mapAirtableToLensOption(record);
+  } catch (error) {
+    console.error('Error creating lens option:', error);
+    throw new Error('Failed to create lens option');
+  }
+};
+
+// Update lens option
+export const updateLensOption = async (id: string, updates: Partial<LensOption>): Promise<LensOption> => {
+  try {
+    const fields: any = {};
+    if (updates.name) fields['Name'] = updates.name;
+    if (updates.type) fields['Type'] = updates.type;
+    if (updates.price !== undefined) fields['Price'] = updates.price;
+    if (updates.description) fields['Description'] = updates.description;
+    if (updates.isActive !== undefined) fields['IsActive'] = updates.isActive;
+
+    const record = await base(LENS_OPTIONS_TABLE).update(id, fields, { typecast: true });
+    return mapAirtableToLensOption(record);
+  } catch (error) {
+    console.error('Error updating lens option:', error);
+    throw new Error('Failed to update lens option');
+  }
+};
+
+// Delete lens option
+export const deleteLensOption = async (id: string): Promise<void> => {
+  try {
+    await base(LENS_OPTIONS_TABLE).destroy(id);
+  } catch (error) {
+    console.error('Error deleting lens option:', error);
+    throw new Error('Failed to delete lens option');
+  }
+};
+
+// ============= COATING OPTIONS =============
+const COATING_OPTIONS_TABLE = import.meta.env.VITE_AIRTABLE_COATING_OPTIONS_TABLE || 'Coating Options';
+
+export interface LensCoating {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  isActive: boolean;
+}
+
+const mapAirtableToCoatingOption = (record: any): LensCoating => {
+  const fields = record.fields;
+  return {
+    id: record.id,
+    name: fields['Name'] || '',
+    price: parseFloat(fields['Price']) || 0,
+    description: fields['Description'] || '',
+    isActive: fields['IsActive'] !== false,
+  };
+};
+
+// Fetch all active coating options
+export const fetchCoatingOptions = async (): Promise<LensCoating[]> => {
+  try {
+    const records = await base(COATING_OPTIONS_TABLE)
+      .select({
+        filterByFormula: '{IsActive} = TRUE()',
+        sort: [{ field: 'Price', direction: 'asc' }],
+      })
+      .all();
+
+    return records.map(mapAirtableToCoatingOption);
+  } catch (error) {
+    console.error('Error fetching coating options:', error);
+    throw new Error('Failed to fetch coating options');
+  }
+};
+
+// Create coating option (admin)
+export const createCoatingOption = async (data: Partial<LensCoating>): Promise<LensCoating> => {
+  try {
+    const record = await base(COATING_OPTIONS_TABLE).create(
+      {
+        'Name': data.name,
+        'Price': data.price,
+        'Description': data.description,
+        'IsActive': data.isActive !== false,
+      },
+      { typecast: true }
+    );
+    return mapAirtableToCoatingOption(record);
+  } catch (error) {
+    console.error('Error creating coating option:', error);
+    throw new Error('Failed to create coating option');
+  }
+};
+
+// Update coating option
+export const updateCoatingOption = async (id: string, updates: Partial<LensCoating>): Promise<LensCoating> => {
+  try {
+    const fields: any = {};
+    if (updates.name) fields['Name'] = updates.name;
+    if (updates.price !== undefined) fields['Price'] = updates.price;
+    if (updates.description) fields['Description'] = updates.description;
+    if (updates.isActive !== undefined) fields['IsActive'] = updates.isActive;
+
+    const record = await base(COATING_OPTIONS_TABLE).update(id, fields, { typecast: true });
+    return mapAirtableToCoatingOption(record);
+  } catch (error) {
+    console.error('Error updating coating option:', error);
+    throw new Error('Failed to update coating option');
+  }
+};
+
+// Delete coating option
+export const deleteCoatingOption = async (id: string): Promise<void> => {
+  try {
+    await base(COATING_OPTIONS_TABLE).destroy(id);
+  } catch (error) {
+    console.error('Error deleting coating option:', error);
+    throw new Error('Failed to delete coating option');
+  }
+};
+
+// ============= STORE LOCATIONS =============
+const STORE_LOCATIONS_TABLE = import.meta.env.VITE_AIRTABLE_STORE_LOCATIONS_TABLE || 'Store Locations';
+
+export interface StoreLocation {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  hours: string;
+  image: string;
+  calendlyUrl: string;
+  isActive: boolean;
+  createdBy?: string;
+}
+
+const mapAirtableToStoreLocation = (record: any): StoreLocation => {
+  const fields = record.fields;
+  return {
+    id: record.id,
+    name: fields['Name'] || '',
+    address: fields['Address'] || '',
+    phone: fields['Phone'] || '',
+    hours: fields['Hours'] || '',
+    image: fields['Image URL'] || '',
+    calendlyUrl: fields['Calendly URL'] || '',
+    isActive: fields['IsActive'] !== false,
+    createdBy: fields['Created By']?.email || fields['Created By'] || '', // Handle collaborator as email/string
+  };
+};
+
+// Fetch all active store locations
+export const fetchStoreLocations = async (): Promise<StoreLocation[]> => {
+  try {
+    const records = await base(STORE_LOCATIONS_TABLE)
+      .select({
+        filterByFormula: '{IsActive} = TRUE()', // Only active locations
+        sort: [{ field: 'Name', direction: 'asc' }],
+      })
+      .all();
+
+    return records.map(mapAirtableToStoreLocation);
+  } catch (error) {
+    console.error('Error fetching store locations:', error);
+    throw new Error('Failed to fetch store locations');
+  }
+};
+
+// Create store location (admin) - Auto-sets Created By to user email
+export const createStoreLocation = async (data: Partial<StoreLocation> & { createdByEmail: string }): Promise<StoreLocation> => {
+  try {
+    const record = await base(STORE_LOCATIONS_TABLE).create(
+      {
+        'Name': data.name,
+        'Address': data.address,
+        'Phone': data.phone,
+        'Hours': data.hours,
+        'Image URL': data.image,
+        'Calendly URL': data.calendlyUrl,
+        'IsActive': data.isActive !== false,
+        'Created By': [{ email: data.createdByEmail }], // Auto-set collaborator to current user email
+      },
+      { typecast: true }
+    );
+    return mapAirtableToStoreLocation(record);
+  } catch (error) {
+    console.error('Error creating store location:', error);
+    throw new Error('Failed to create store location');
+  }
+};
+
+// Update store location
+export const updateStoreLocation = async (id: string, updates: Partial<StoreLocation>): Promise<StoreLocation> => {
+  try {
+    const fields: any = {};
+    if (updates.name) fields['Name'] = updates.name;
+    if (updates.address) fields['Address'] = updates.address;
+    if (updates.phone) fields['Phone'] = updates.phone;
+    if (updates.hours) fields['Hours'] = updates.hours;
+    if (updates.image) fields['Image URL'] = updates.image;
+    if (updates.calendlyUrl) fields['Calendly URL'] = updates.calendlyUrl;
+    if (updates.isActive !== undefined) fields['IsActive'] = updates.isActive;
+
+    const record = await base(STORE_LOCATIONS_TABLE).update(id, fields, { typecast: true });
+    return mapAirtableToStoreLocation(record);
+  } catch (error) {
+    console.error('Error updating store location:', error);
+    throw new Error('Failed to update store location');
+  }
+};
+
+// Delete store location
+export const deleteStoreLocation = async (id: string): Promise<void> => {
+  try {
+    await base(STORE_LOCATIONS_TABLE).destroy(id);
+  } catch (error) {
+    console.error('Error deleting store location:', error);
+    throw new Error('Failed to delete store location');
   }
 };

@@ -1,17 +1,28 @@
 /* src/components/LensSelector/LensSelector.tsx */
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Check, Upload, Camera, FileText, Eye, Info, ChevronLeft } from 'lucide-react';
-import { LensOption, LensCoating, PrescriptionData } from '../../types';
-import { lensOptions, coatingOptions } from '../../data/mockData';
+import { LensOption, LensCoating, PrescriptionData, Product } from '../../types';
+import { useProductLensOptions } from '../../hooks/useProductLensOptions';
 
 interface LensSelectorProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (lensOption?: LensOption, coatings?: LensCoating[], prescription?: PrescriptionData) => void;
   productName: string;
+  product: Product;  // Pass the full product
 }
 
-export function LensSelector({ isOpen, onClose, onAdd, productName }: LensSelectorProps) {
+export function LensSelector({ isOpen, onClose, onAdd, productName, product }: LensSelectorProps) {
+  // Use product-specific lens options
+  const { 
+    lensOptions, 
+    coatingOptions, 
+    loading 
+  } = useProductLensOptions(
+    product.allowedLensOptions, 
+    product.allowedCoatingOptions
+  );
+
   const [selectedLens, setSelectedLens] = useState<LensOption | null>(null);
   const [selectedCoatings, setSelectedCoatings] = useState<LensCoating[]>([]);
   const [prescription, setPrescription] = useState<PrescriptionData>({
@@ -58,6 +69,35 @@ export function LensSelector({ isOpen, onClose, onAdd, productName }: LensSelect
   };
 
   if (!isOpen) return null;
+
+  // If product doesn't support lenses at all
+  if (!product.lensCompatible) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-2xl max-w-md w-full p-6">
+          <div className="text-center">
+            <Eye className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Lenses Not Available
+            </h3>
+            <p className="text-gray-600 mb-4">
+              This product doesn't support prescription lenses.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <p>Loading options...</p>;
+  }
 
   return (
     <>

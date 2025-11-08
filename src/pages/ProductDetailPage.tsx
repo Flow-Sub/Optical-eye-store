@@ -327,6 +327,7 @@ export function ProductDetailPage() {
         onClose={() => setIsLensSelectorOpen(false)}
         onAdd={handleAddToCart}
         productName={product.name}
+        product={product}
       />
 
       {/* ── ANIMATIONS ── */}

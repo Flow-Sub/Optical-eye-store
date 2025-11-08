@@ -19,6 +19,8 @@ export interface Product {
   isActive: boolean;
   features: string[];
   lensCompatible: boolean;
+  allowedLensOptions?: string[];
+  allowedCoatingOptions?: string[]; 
 }
 
 export interface LensOption {
@@ -88,4 +90,33 @@ export interface Appointment {
   time: string;
   status: 'scheduled' | 'completed' | 'cancelled';
   notes?: string;
+}
+
+export interface LensOption {
+  id: string;
+  name: string;
+  type: 'single-vision' | 'bifocal' | 'progressive';
+  price: number;
+  description: string;
+  isActive: boolean;
+}
+
+export interface LensCoating {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  isActive: boolean;
+}
+
+export interface StoreLocation {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  hours: string;
+  image: string;
+  calendlyUrl: string;
+  isActive: boolean;
+  createdBy?: string; // Maps to Collaborator field (email or name)
 }

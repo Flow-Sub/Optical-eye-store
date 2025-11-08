@@ -736,7 +736,7 @@ export const fetchStoreLocations = async (): Promise<StoreLocation[]> => {
 };
 
 // Create store location (admin) - Auto-sets Created By to user email
-export const createStoreLocation = async (data: Partial<StoreLocation> & { createdByEmail: string }): Promise<StoreLocation> => {
+export const createStoreLocation = async (data: Partial<StoreLocation>): Promise<StoreLocation> => {
   try {
     const record = await base(STORE_LOCATIONS_TABLE).create(
       {
@@ -747,7 +747,7 @@ export const createStoreLocation = async (data: Partial<StoreLocation> & { creat
         'Image URL': data.image,
         'Calendly URL': data.calendlyUrl,
         'IsActive': data.isActive !== false,
-        'Created By': [{ email: data.createdByEmail }], // Auto-set collaborator to current user email
+        'Created By': 'eyeoptical007@gmail.com',
       },
       { typecast: true }
     );

@@ -27,7 +27,7 @@ export function StoreLocationsManagementView({ onSuccess }: StoreLocationsManage
     isActive: true
   });
 
-    const handleSubmit = async (e: React.FormEvent, userEmail: string) => {
+    const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.address) {
       alert('Please fill in name and address');
@@ -39,7 +39,7 @@ export function StoreLocationsManagementView({ onSuccess }: StoreLocationsManage
       if (editingId) {
         await updateStoreLocation(editingId, { ...formData, image: uploadedImage || formData.image });  // ✅ Use uploaded or existing
       } else {
-        await createStoreLocation({ ...formData, image: uploadedImage, createdByEmail: userEmail });  // ✅ Use uploaded URL
+        await createStoreLocation({ ...formData, image: uploadedImage });
       }
       
       // Reset form & upload states
@@ -116,7 +116,7 @@ export function StoreLocationsManagementView({ onSuccess }: StoreLocationsManage
           <h4 className="text-lg font-medium text-gray-900 mb-4">
             {editingId ? 'Edit Location' : 'Add New Location'}
           </h4>
-          <form onSubmit={(e) => handleSubmit(e, 'admin@example.com')} className="space-y-4"> {/* Replace 'admin@example.com' with user.email from props/context */}
+          <form onSubmit={handleSubmit} className="space-y-4"> 
             <div>
               <label className="flex items-center space-x-2 text-sm font-medium text-gray-700 mb-2">
                 <MapPin className="h-4 w-4" />

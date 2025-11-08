@@ -46,6 +46,7 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   // Single Product Form State
+    // Single Product Form State
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     brand: '',
@@ -55,7 +56,7 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
     stock: 0,
     lensCompatible: false,
     features: [],
-    images: ['https://via.placeholder.com/500'],
+    images: uploadedImages,  // ✅ FIXED: Start with uploaded (empty initially, fills during upload)
     isActive: true
   });
 
@@ -74,36 +75,37 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
   const { coatingOptions, loading: coatingLoading } = useCoatingOptions();
 
   // Single Product: Handle Form Submit
-  const handleSingleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.name || !formData.brand || (formData.price ?? 0) <= 0) {
-      alert('Please fill required fields (Name, Brand, Price).');
-      return;
-    }
-    setLoading(true);
-    try {
-      // Parse features from comma-separated input
-      const features = featuresInput ? featuresInput.split(',').map((f: string) => f.trim()).filter(Boolean) : [];
-      // Parse images from uploaded images
-      const images = uploadedImages.length > 0 ? uploadedImages : ['https://via.placeholder.com/500'];
-      
-      // Create product with lens and coating options
-      await createProduct({ 
-        ...formData, 
-        features, 
-        images,
-        allowedLensOptions: selectedLensOptions,
-        allowedCoatingOptions: selectedCoatingOptions
-      });
-      
-      onSuccess();
-      onClose();
-    } catch (error) {
-      alert('Failed to create product. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Single Product: Handle Form Submit
+const handleSingleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!formData.name || !formData.brand || (formData.price ?? 0) <= 0) {
+    alert('Please fill required fields (Name, Brand, Price).');
+    return;
+  }
+  setLoading(true);
+  try {
+    // Parse features from comma-separated input
+    const features = featuresInput ? featuresInput.split(',').map((f: string) => f.trim()).filter(Boolean) : [];
+    // ✅ FIXED: Use formData.images directly (populated during upload, no placeholder fallback)
+    const images = formData.images || [];  // Empty if no uploads (let Airtable handle default)
+    
+    // Create product with lens and coating options
+    await createProduct({ 
+      ...formData, 
+      features, 
+      images,  // Now always real URLs (or empty)
+      allowedLensOptions: selectedLensOptions,
+      allowedCoatingOptions: selectedCoatingOptions
+    });
+    
+    onSuccess();
+    onClose();
+  } catch (error) {
+    alert('Failed to create product. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   // Single: Update Form Data Helper
   const updateFormData = <K extends keyof Partial<Product>>(key: K, value: Partial<Product>[K]) => {
@@ -557,7 +559,7 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                           };
                           reader.readAsDataURL(file);
 
-                          // Upload to S3
+                          // Upload to API
                           try {
                             const uploadFormData = new FormData();
                             uploadFormData.append('image', file);
@@ -571,6 +573,11 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
 
                             if (result.success && result.data?.url) {
                               newUrls.push(result.data.url);
+                              // ✅ FIXED: Sync formData immediately after each upload
+                              setFormData(prev => ({
+                                ...prev,
+                                images: [...(prev.images || []), result.data.url]
+                              }));
                             } else {
                               alert(`Failed to upload ${file.name}`);
                             }
@@ -647,11 +654,11 @@ Aviator Sunglasses,Prada,sunglasses,129.99,Iconic pilot style with polarized len
                 </button>
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || uploadingImages}  // ✅ FIXED: Disable until uploads finish
                   className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 font-light disabled:opacity-50 flex items-center space-x-2"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>{loading ? 'Creating...' : 'Create Product'}</span>
+                  <span>{(loading || uploadingImages) ? 'Processing...' : 'Create Product'}</span>
                 </button>
               </div>
             </form>

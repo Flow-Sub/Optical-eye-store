@@ -80,7 +80,6 @@ export function ServicesPage() {
   if (window.Calendly) {
     window.Calendly.initPopupWidget({
       url: selectedLocation.calendlyUrl,
-      // ✅ ADD THIS: Pre-fill customer data
       prefill: {
         name: bookingData.name,
         email: bookingData.email,

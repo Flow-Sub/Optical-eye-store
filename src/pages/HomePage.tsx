@@ -327,7 +327,7 @@ const featuredProducts = products.slice(0, 4); // Keep original for Featured Col
       <>
         <div className="grid md:grid-cols-2 gap-12">
           {newArrivals.map((product) => (
-            <Link to={`/products/${product.id}`} key={product.id} className="group">
+            <Link to={`/product/${product.id}`} key={product.id} className="group">
               <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
                 <img
                   src={product.images[0] || 'https://via.placeholder.com/500'}
@@ -374,7 +374,7 @@ const featuredProducts = products.slice(0, 4); // Keep original for Featured Col
     <div className="grid md:grid-cols-2 gap-12">
       {bestsellers.length > 0 ? (
         bestsellers.map((product) => (
-          <Link to={`/products/${product.id}`} key={product.id} className="group">
+          <Link to={`/product/${product.id}`} key={product.id} className="group">
             <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
               <img
                 src={product.images[0] || 'https://via.placeholder.com/500'}

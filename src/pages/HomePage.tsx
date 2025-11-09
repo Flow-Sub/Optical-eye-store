@@ -310,105 +310,104 @@ const featuredProducts = products.slice(0, 4); // Keep original for Featured Col
         </div>
       </section>
 
-      {/* NEW ARRIVALS */}
-      {/* NEW ARRIVALS */}
-<section className="py-20 bg-white">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="text-center mb-12 animate-fadeIn">
-      <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">New Arrivals</h2>
-      <p className="text-gray-600 max-w-2xl mx-auto">Fresh styles just landed</p>
-    </div>
+      {/* NEW ARRIVALS - BLACK BACKGROUND */}
+      <section className="py-20 bg-black">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 animate-fadeIn">
+            <h2 className="text-2xl md:text-3xl font-light text-white mb-3">New Arrivals</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Fresh styles just landed</p>
+          </div>
 
-    {loading ? (
-      <div className="text-center py-16">
-        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
-      </div>
-    ) : newArrivals.length > 0 ? (
-      <>
-        <div className="grid md:grid-cols-2 gap-12">
-          {newArrivals.map((product) => (
-            <Link to={`/product/${product.id}`} key={product.id} className="group">
-              <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
-                <img
-                  src={product.images[0] || 'https://via.placeholder.com/500'}
-                  alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                />
+          {loading ? (
+            <div className="text-center py-16">
+              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-white"></div>
+            </div>
+          ) : newArrivals.length > 0 ? (
+            <>
+              <div className="grid md:grid-cols-2 gap-12">
+                {newArrivals.map((product) => (
+                  <Link to={`/product/${product.id}`} key={product.id} className="group">
+                    <div className="aspect-[4/5] bg-gray-900 rounded-lg overflow-hidden mb-6 shadow-lg group-hover:shadow-2xl transition-shadow border border-white/10">
+                      <img
+                        src={product.images[0] || 'https://via.placeholder.com/500'}
+                        alt={product.name}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <div className="text-center">
+                      <h3 className="font-light text-white text-lg">{product.name}</h3>
+                      <p className="text-gray-400 mt-1">${product.price.toFixed(2)}</p>
+                    </div>
+                  </Link>
+                ))}
               </div>
-              <div className="text-center">
-                <h3 className="font-light text-gray-900 text-lg">{product.name}</h3>
-                <p className="text-gray-600 mt-1">${product.price.toFixed(2)}</p>
+              
+              {/* View All Link */}
+              <div className="text-center mt-12">
+                <Link
+                  to="/products?filter=new-arrivals"
+                  className="inline-flex items-center space-x-2 text-white font-medium hover:text-gray-300 transition-colors group"
+                >
+                  <span>View All New Arrivals</span>
+                  <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Link>
               </div>
-            </Link>
-          ))}
+            </>
+          ) : (
+            <div className="text-center py-16 text-gray-500">
+              <p>No new arrivals found. Add products named "Aurora" and "Reed" in Airtable.</p>
+            </div>
+          )}
         </div>
-        
-        {/* ✅ ADD THIS - View All Link */}
-        <div className="text-center mt-12">
-          <Link
-            to="/products?filter=new-arrivals"
-            className="inline-flex items-center space-x-2 text-gray-900 font-medium hover:text-gray-600 transition-colors group"
-          >
-            <span>View All New Arrivals</span>
-            <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-      </>
-    ) : (
-      <div className="text-center py-16 text-gray-500">
-        <p>No new arrivals found. Add products named "Aurora" and "Reed" in Airtable.</p>
-      </div>
-    )}
-  </div>
-</section>
+      </section>
 
       {/* BESTSELLERS */}
-{/* BESTSELLERS */}
-<section className="py-20 bg-gray-50">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div className="text-center mb-12 animate-fadeIn">
-      <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Bestsellers</h2>
-      <p className="text-gray-600 max-w-2xl mx-auto">Customer favorites</p>
-    </div>
+      {/* BESTSELLERS */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 animate-fadeIn">
+            <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Bestsellers</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Customer favorites</p>
+          </div>
 
-    <div className="grid md:grid-cols-2 gap-12">
-      {bestsellers.length > 0 ? (
-        bestsellers.map((product) => (
-          <Link to={`/product/${product.id}`} key={product.id} className="group">
-            <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
-              <img
-                src={product.images[0] || 'https://via.placeholder.com/500'}
-                alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-              />
+          <div className="grid md:grid-cols-2 gap-12">
+            {bestsellers.length > 0 ? (
+              bestsellers.map((product) => (
+                <Link to={`/product/${product.id}`} key={product.id} className="group">
+                  <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
+                    <img
+                      src={product.images[0] || 'https://via.placeholder.com/500'}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <h3 className="font-light text-gray-900 text-lg">{product.name}</h3>
+                    <p className="text-gray-600 mt-1">${product.price.toFixed(2)}</p>
+                  </div>
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-2 text-center py-16 text-gray-500">
+                <p>No bestsellers found. Add products named "Lennon" and "Grace" in Airtable.</p>
+              </div>
+            )}
+          </div>
+          
+          {/* ✅ ADD THIS - View All Link */}
+          {bestsellers.length > 0 && (
+            <div className="text-center mt-12">
+              <Link
+                to="/products?filter=bestsellers"
+                className="inline-flex items-center space-x-2 text-gray-900 font-medium hover:text-gray-600 transition-colors group"
+              >
+                <span>View All Bestsellers</span>
+                <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
             </div>
-            <div className="text-center">
-              <h3 className="font-light text-gray-900 text-lg">{product.name}</h3>
-              <p className="text-gray-600 mt-1">${product.price.toFixed(2)}</p>
-            </div>
-          </Link>
-        ))
-      ) : (
-        <div className="col-span-2 text-center py-16 text-gray-500">
-          <p>No bestsellers found. Add products named "Lennon" and "Grace" in Airtable.</p>
+          )}
         </div>
-      )}
-    </div>
-    
-    {/* ✅ ADD THIS - View All Link */}
-    {bestsellers.length > 0 && (
-      <div className="text-center mt-12">
-        <Link
-          to="/products?filter=bestsellers"
-          className="inline-flex items-center space-x-2 text-gray-900 font-medium hover:text-gray-600 transition-colors group"
-        >
-          <span>View All Bestsellers</span>
-          <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-        </Link>
-      </div>
-    )}
-  </div>
-</section>
+      </section>
 
       {/* NEW: Flowing Menu Collections (Added above SERVICES) */}
       <section className="py-20 bg-black"> {/* Updated: Changed bg-gray-50 to bg-black */}
@@ -544,7 +543,7 @@ const featuredProducts = products.slice(0, 4); // Keep original for Featured Col
       </section>
 
       {/* NEWSLETTER */}
-      <section className="py-20 bg-gray-900 text-white">
+      {/* <section className="py-20 bg-gray-900 text-white">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-light mb-4">Stay in the loop</h2>
           <p className="text-gray-300 mb-8 max-w-xl mx-auto">Subscribe for new collections, exclusive offers, and eye-care tips.</p>
@@ -560,7 +559,7 @@ const featuredProducts = products.slice(0, 4); // Keep original for Featured Col
           </form>
           <p className="text-xs text-gray-400 mt-4">By subscribing you agree to our Privacy Policy.</p>
         </div>
-      </section>
+      </section> */}
 
       {/* STORE INFO */}
       <section className="py-20 bg-white">

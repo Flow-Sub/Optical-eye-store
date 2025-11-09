@@ -4,44 +4,53 @@ import { Link } from 'react-router-dom';
 
 export function Footer() {
   return (
-    <footer className="bg-gradient-to-br from-gray-900 via-gray-900 to-black text-white">
-      {/* Glossy top border */}
-      <div className="h-px bg-gradient-to-r from-transparent via-gray-600 to-transparent"></div>
+    <footer className="bg-black text-white">
+      {/* Subtle top border */}
+      <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Brand Section */}
+          
+          {/* ═══════════════════════════════════════════════════════════════ */}
+          {/* BRAND SECTION - BIG BOLD MODERN */}
+          {/* ═══════════════════════════════════════════════════════════════ */}
           <div className="space-y-6">
-            <Link to="/" className="flex items-center space-x-3 group">
-              <div className="relative">
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-sm"></div>
-                <Eye className="h-8 w-8 text-white relative z-10" />
+            <Link to="/" className="block group">
+              <div className="flex items-center space-x-3 mb-2">
+                <Eye className="h-10 w-10 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-light text-white tracking-wide">
-                  Opti Eye Care
-                </span>
-                <span className="text-xs text-gray-400 -mt-1 font-light">Vision Perfected</span>
-              </div>
+              
+              {/* BIG BOLD BRAND NAME */}
+              <h2 className="text-5xl font-black text-white mb-2 leading-none tracking-tight">
+                OPTI EYE CARE
+              </h2>
+              
+              {/* TAGLINE */}
+              <p className="text-sm text-gray-400 uppercase tracking-widest font-light">
+                Vision Perfected
+              </p>
             </Link>
-            <p className="text-gray-300 text-sm leading-relaxed font-light">
+
+            <p className="text-gray-400 text-sm leading-relaxed">
               Your new favourite, family-friendly eye care specialist! Led by a consultant ophthalmologist, 
               offering exceptional & affordable eye care for you and your family.
             </p>
+
             <div className="flex space-x-4">
               <a 
                 href="https://www.instagram.com/optieyecareuk" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="relative group"
+                className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all"
               >
-                <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
-                <Instagram className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
+                <Instagram className="h-5 w-5" />
               </a>
               {[Facebook, Twitter].map((Icon, index) => (
-                <div key={index} className="relative group">
-                  <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
-                  <Icon className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
+                <div 
+                  key={index}
+                  className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white hover:text-black transition-all cursor-pointer"
+                >
+                  <Icon className="h-5 w-5" />
                 </div>
               ))}
             </div>
@@ -49,7 +58,7 @@ export function Footer() {
 
           {/* Shop Links */}
           <div>
-            <h3 className="text-sm font-light text-white mb-6 uppercase tracking-wider">Shop</h3>
+            <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wide">Shop</h3>
             <ul className="space-y-3">
               {[
                 { name: 'All Frames', href: '/products' },
@@ -59,9 +68,12 @@ export function Footer() {
                 { name: 'Sunglasses', href: '/products?category=sunglasses' }
               ].map((item) => (
                 <li key={item.name}>
-                  <Link to={item.href} className="text-sm text-gray-300 hover:text-white transition-colors font-light flex items-center group">
+                  <Link 
+                    to={item.href} 
+                    className="text-gray-400 hover:text-white transition-colors flex items-center group"
+                  >
+                    <ChevronRight className="h-4 w-4 mr-1 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" />
                     <span>{item.name}</span>
-                    <ChevronRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" />
                   </Link>
                 </li>
               ))}
@@ -70,7 +82,7 @@ export function Footer() {
 
           {/* Services */}
           <div>
-            <h3 className="text-sm font-light text-white mb-6 uppercase tracking-wider">Services</h3>
+            <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wide">Services</h3>
             <ul className="space-y-3">
               {[
                 'Enhanced Eye Disease Screening',
@@ -82,8 +94,11 @@ export function Footer() {
                 'Private Consultations'
               ].map((service) => (
                 <li key={service}>
-                  <Link to="/services" className="text-sm text-gray-300 hover:text-white transition-colors font-light flex items-start group">
-                    <ChevronRight className="h-3 w-3 mr-1 mt-1 opacity-70 group-hover:opacity-100 flex-shrink-0" />
+                  <Link 
+                    to="/services" 
+                    className="text-gray-400 hover:text-white transition-colors flex items-start group text-sm"
+                  >
+                    <span className="text-white mr-2">•</span>
                     <span>{service}</span>
                   </Link>
                 </li>
@@ -93,58 +108,58 @@ export function Footer() {
 
           {/* Contact & Info */}
           <div>
-            <h3 className="text-sm font-light text-white mb-6 uppercase tracking-wider">Contact</h3>
+            <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wide">Contact</h3>
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                <MapPin className="h-5 w-5 text-white mt-0.5 flex-shrink-0" />
                 <a 
                   href="https://maps.google.com/?q=1+Regent+Rd,+Altrincham+WA14+1RY"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-gray-300 hover:text-white transition-colors font-light"
+                  className="text-gray-400 hover:text-white transition-colors"
                 >
                   1 Regent Rd, Altrincham<br />WA14 1RY, United Kingdom
                 </a>
               </div>
               <div className="flex items-center space-x-3">
-                <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <a href="tel:01619281891" className="text-sm text-gray-300 hover:text-white transition-colors font-light">
+                <Phone className="h-5 w-5 text-white flex-shrink-0" />
+                <a href="tel:01619281891" className="text-gray-400 hover:text-white transition-colors">
                   0161 928 1891
                 </a>
               </div>
               <div className="flex items-center space-x-3">
-                <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <a href="mailto:info@optieyecare.co.uk" className="text-sm text-gray-300 hover:text-white transition-colors font-light">
+                <Mail className="h-5 w-5 text-white flex-shrink-0" />
+                <a href="mailto:info@optieyecare.co.uk" className="text-gray-400 hover:text-white transition-colors">
                   info@optieyecare.co.uk
                 </a>
               </div>
             </div>
             
             {/* Store Hours */}
-            <div className="mt-6 pt-6 border-t border-gray-800">
-              <div className="flex items-center space-x-2 mb-3">
-                <Clock className="h-4 w-4 text-gray-400" />
-                <p className="text-sm text-white font-normal">Store Hours</p>
+            <div className="mt-6 pt-6 border-t border-white/10">
+              <div className="flex items-center space-x-2 mb-4">
+                <Clock className="h-5 w-5 text-white" />
+                <p className="text-white font-bold">Store Hours</p>
               </div>
-              <div className="text-xs text-gray-400 space-y-1.5 font-light">
+              <div className="text-sm text-gray-400 space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Sunday</span>
-                  <span className="text-gray-400">Closed</span>
+                  <span>Sunday</span>
+                  <span className="text-white">Closed</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Monday - Thursday</span>
+                  <span>Mon - Thu</span>
                   <span className="text-white">10am - 4:30pm</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Friday</span>
+                  <span>Friday</span>
                   <span className="text-white">10am - 4pm</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-300">Saturday</span>
+                  <span>Saturday</span>
                   <span className="text-white">10am - 4pm</span>
                 </div>
               </div>
-              <p className="text-xs text-gray-500 mt-3 italic">
+              <p className="text-xs text-gray-500 mt-4 italic">
                 *Free NHS sight tests for eligible patients, children & over 60's
               </p>
             </div>
@@ -152,8 +167,8 @@ export function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm font-light order-2 md:order-1 mt-4 md:mt-0">
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+          <p className="text-gray-500 text-sm order-2 md:order-1 mt-4 md:mt-0">
             © 2024 Opti Eye Care. All rights reserved.
           </p>
           <div className="flex space-x-6 order-1 md:order-2">
@@ -161,7 +176,7 @@ export function Footer() {
               <Link 
                 key={item}
                 to={`/${item.toLowerCase().replace(/ /g, '-')}`}
-                className="text-gray-400 hover:text-white text-sm font-light transition-colors"
+                className="text-gray-400 hover:text-white text-sm transition-colors"
               >
                 {item}
               </Link>

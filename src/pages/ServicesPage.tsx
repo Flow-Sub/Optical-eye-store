@@ -75,14 +75,24 @@ export function ServicesPage() {
   };
 
   const openCalendly = () => {
-    if (!selectedLocation) return;
-    
-    if (window.Calendly) {
-      window.Calendly.initPopupWidget({
-        url: selectedLocation.calendlyUrl // ✅ Dynamic
-      });
-    }
-  };
+  if (!selectedLocation) return;
+  
+  if (window.Calendly) {
+    window.Calendly.initPopupWidget({
+      url: selectedLocation.calendlyUrl,
+      // ✅ ADD THIS: Pre-fill customer data
+      prefill: {
+        name: bookingData.name,
+        email: bookingData.email,
+        customAnswers: {
+          a1: bookingData.phone || '', // Phone number
+          a2: selectedService,          // Service type
+          a3: bookingData.notes || ''   // Additional notes
+        }
+      }
+    });
+  }
+};
 
   const handleBookingSubmit = async () => {
     if (!selectedLocation || !bookingData.name || !bookingData.email) {

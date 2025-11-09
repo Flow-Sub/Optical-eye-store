@@ -39,10 +39,10 @@ export function CheckoutPage() {
       const orderId = `ORD-${Date.now().toString().slice(-8)}`;
       
       const shippingAddress = `${shippingInfo.firstName} ${shippingInfo.lastName}
-${shippingInfo.address}
-${shippingInfo.city}, ${shippingInfo.state} ${shippingInfo.zipCode}
-${shippingInfo.country}
-Phone: ${shippingInfo.phone}`;
+  ${shippingInfo.address}
+  ${shippingInfo.city}, ${shippingInfo.state} ${shippingInfo.zipCode}
+  ${shippingInfo.country}
+  Phone: ${shippingInfo.phone}`;
 
       const orderItems = items.map(item => ({
         productId: item.product.id,
@@ -58,8 +58,16 @@ Phone: ${shippingInfo.phone}`;
           name: c.name,
           price: c.price
         })) || [],
-        prescriptionData: item.prescriptionData || null
+        prescriptionData: item.prescriptionData || null // ✅ This stays
       }));
+
+      // ✅ NEW: Extract prescription images from cart items
+      const prescriptionImages: string[] = [];
+        items.forEach(item => {
+          if (item.prescriptionData?.uploadedImageUrl) {
+            prescriptionImages.push(item.prescriptionData.uploadedImageUrl);
+          }
+        });
 
       await createOrder({
         orderId,
@@ -75,6 +83,7 @@ Phone: ${shippingInfo.phone}`;
         numberOfItems: items.reduce((sum, item) => sum + item.quantity, 0),
         orderStatus: 'pending',
         orderDate: new Date().toISOString(),
+        prescriptionImages, // ✅ NEW: Add prescription images
       });
 
       for (const item of items) {

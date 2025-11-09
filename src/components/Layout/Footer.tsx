@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Facebook, Twitter, Instagram, Mail, Phone, MapPin, ChevronRight } from 'lucide-react';
+import { Eye, Facebook, Twitter, Instagram, Mail, Phone, MapPin, ChevronRight, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export function Footer() {
@@ -19,17 +19,26 @@ export function Footer() {
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-light text-white tracking-wide">
-                  OpticalStore
+                  Opti Eye Care
                 </span>
                 <span className="text-xs text-gray-400 -mt-1 font-light">Vision Perfected</span>
               </div>
             </Link>
             <p className="text-gray-300 text-sm leading-relaxed font-light">
-              Premium eyewear and professional eye care services. 
-              Experience clarity and style with our curated collections.
+              Your new favourite, family-friendly eye care specialist! Led by a consultant ophthalmologist, 
+              offering exceptional & affordable eye care for you and your family.
             </p>
             <div className="flex space-x-4">
-              {[Facebook, Twitter, Instagram].map((Icon, index) => (
+              <a 
+                href="https://www.instagram.com/optieyecareuk" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="relative group"
+              >
+                <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
+                <Instagram className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
+              </a>
+              {[Facebook, Twitter].map((Icon, index) => (
                 <div key={index} className="relative group">
                   <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
                   <Icon className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
@@ -64,16 +73,18 @@ export function Footer() {
             <h3 className="text-sm font-light text-white mb-6 uppercase tracking-wider">Services</h3>
             <ul className="space-y-3">
               {[
-                'Eye Examinations',
-                'Contact Lens Fitting',
-                'Frame Adjustments',
-                'Lens Replacement',
-                'Repairs & Maintenance'
+                'Enhanced Eye Disease Screening',
+                'OCT Scans',
+                'Contact Lens Trials & Fitting',
+                'Free NHS Sight Tests',
+                'Home Visit Eye Tests',
+                'Children\'s Consultations',
+                'Private Consultations'
               ].map((service) => (
                 <li key={service}>
-                  <Link to="/services" className="text-sm text-gray-300 hover:text-white transition-colors font-light flex items-center group">
+                  <Link to="/services" className="text-sm text-gray-300 hover:text-white transition-colors font-light flex items-start group">
+                    <ChevronRight className="h-3 w-3 mr-1 mt-1 opacity-70 group-hover:opacity-100 flex-shrink-0" />
                     <span>{service}</span>
-                    <ChevronRight className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1" />
                   </Link>
                 </li>
               ))}
@@ -86,26 +97,56 @@ export function Footer() {
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <span className="text-sm text-gray-300 font-light">123 Vision Street, City, State 12345</span>
+                <a 
+                  href="https://maps.google.com/?q=1+Regent+Rd,+Altrincham+WA14+1RY"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-gray-300 hover:text-white transition-colors font-light"
+                >
+                  1 Regent Rd, Altrincham<br />WA14 1RY, United Kingdom
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Phone className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <span className="text-sm text-gray-300 font-light">(555) 123-4567</span>
+                <a href="tel:01619281891" className="text-sm text-gray-300 hover:text-white transition-colors font-light">
+                  0161 928 1891
+                </a>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <span className="text-sm text-gray-300 font-light">info@opticalstore.com</span>
+                <a href="mailto:info@optieyecare.co.uk" className="text-sm text-gray-300 hover:text-white transition-colors font-light">
+                  info@optieyecare.co.uk
+                </a>
               </div>
             </div>
+            
+            {/* Store Hours */}
             <div className="mt-6 pt-6 border-t border-gray-800">
-              <p className="text-sm text-gray-300 font-light mb-2">
-                <strong className="font-normal text-white">Store Hours</strong>
-              </p>
-              <div className="text-xs text-gray-400 space-y-1 font-light">
-                <p>Mon-Fri: 9:00 AM - 7:00 PM</p>
-                <p>Saturday: 9:00 AM - 6:00 PM</p>
-                <p>Sunday: 11:00 AM - 5:00 PM</p>
+              <div className="flex items-center space-x-2 mb-3">
+                <Clock className="h-4 w-4 text-gray-400" />
+                <p className="text-sm text-white font-normal">Store Hours</p>
               </div>
+              <div className="text-xs text-gray-400 space-y-1.5 font-light">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Sunday</span>
+                  <span className="text-gray-400">Closed</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Monday - Thursday</span>
+                  <span className="text-white">10am - 4:30pm</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Friday</span>
+                  <span className="text-white">10am - 4pm</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-300">Saturday</span>
+                  <span className="text-white">10am - 4pm</span>
+                </div>
+              </div>
+              <p className="text-xs text-gray-500 mt-3 italic">
+                *Free NHS sight tests for eligible patients, children & over 60's
+              </p>
             </div>
           </div>
         </div>
@@ -113,13 +154,13 @@ export function Footer() {
         {/* Bottom Section */}
         <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm font-light order-2 md:order-1 mt-4 md:mt-0">
-            © 2024 OpticalStore. All rights reserved.
+            © 2024 Opti Eye Care. All rights reserved.
           </p>
           <div className="flex space-x-6 order-1 md:order-2">
             {['Privacy Policy', 'Terms of Service', 'Return Policy'].map((item) => (
               <Link 
                 key={item}
-                to={`/${item.toLowerCase().replace(' ', '-')}`}
+                to={`/${item.toLowerCase().replace(/ /g, '-')}`}
                 className="text-gray-400 hover:text-white text-sm font-light transition-colors"
               >
                 {item}

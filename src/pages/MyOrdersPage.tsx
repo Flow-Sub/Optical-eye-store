@@ -211,31 +211,105 @@ export function MyOrdersPage() {
                   </button>
 
                   {/* Order Items */}
-                  {expandedOrder === order.id && (
-                    <div className="bg-gray-50 rounded-lg p-4 mt-4 space-y-3">
-                      {JSON.parse(order.orderItems).map((item: any, idx: number) => (
-                        <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200">
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <p className="font-medium text-gray-900">{item.productName}</p>
-                              <p className="text-sm text-gray-600 font-light">{item.brand}</p>
-                              <div className="flex items-center gap-3 mt-2">
-                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-medium">
-                                  Qty: {item.quantity}
-                                </span>
-                                <span className="text-sm text-gray-600 font-light">
-                                  ${item.price.toFixed(2)} each
-                                </span>
-                              </div>
-                            </div>
-                            <p className="font-semibold text-gray-900">
-                              ${(item.price * item.quantity).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                  {/* Order Items */}
+{expandedOrder === order.id && (
+  <div className="bg-gray-50 rounded-lg p-4 mt-4 space-y-3">
+    {JSON.parse(order.orderItems).map((item: any, idx: number) => (
+      <div key={idx} className="bg-white rounded-lg p-3 border border-gray-200">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <p className="font-medium text-gray-900">{item.productName}</p>
+            <p className="text-sm text-gray-600 font-light">{item.brand}</p>
+            
+            {/* ✅ NEW: Show Lens & Coating Options */}
+            {item.lensOption && (
+              <div className="mt-2 space-y-1">
+                <p className="text-xs text-gray-700">
+                  <span className="font-medium">Lens:</span> {item.lensOption.name} 
+                  <span className="text-gray-500"> (+${item.lensOption.price.toFixed(2)})</span>
+                </p>
+                {item.coatings && item.coatings.length > 0 && (
+                  <p className="text-xs text-gray-700">
+                    <span className="font-medium">Coatings:</span> {item.coatings.map((c: any) => c.name).join(', ')}
+                    <span className="text-gray-500"> (+${item.coatings.reduce((sum: number, c: any) => sum + c.price, 0).toFixed(2)})</span>
+                  </p>
+                )}
+              </div>
+            )}
+            
+            {/* ✅ NEW: Show Prescription Data */}
+            {item.prescriptionData && (
+              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                <p className="font-medium text-blue-900 mb-1">📋 Prescription Details:</p>
+                {item.prescriptionData.rightEye?.sphere && (
+                  <p className="text-blue-700">
+                    <span className="font-medium">Right Eye:</span> SPH {item.prescriptionData.rightEye.sphere}, 
+                    CYL {item.prescriptionData.rightEye.cylinder}, 
+                    AXIS {item.prescriptionData.rightEye.axis}
+                  </p>
+                )}
+                {item.prescriptionData.leftEye?.sphere && (
+                  <p className="text-blue-700">
+                    <span className="font-medium">Left Eye:</span> SPH {item.prescriptionData.leftEye.sphere}, 
+                    CYL {item.prescriptionData.leftEye.cylinder}, 
+                    AXIS {item.prescriptionData.leftEye.axis}
+                  </p>
+                )}
+                {item.prescriptionData.pd && (
+                  <p className="text-blue-700"><span className="font-medium">PD:</span> {item.prescriptionData.pd}mm</p>
+                )}
+                {item.prescriptionData.notes && (
+                  <p className="text-blue-700 mt-1"><span className="font-medium">Notes:</span> {item.prescriptionData.notes}</p>
+                )}
+              </div>
+            )}
+            
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-medium">
+                Qty: {item.quantity}
+              </span>
+              <span className="text-sm text-gray-600 font-light">
+                ${item.price.toFixed(2)} each
+              </span>
+            </div>
+          </div>
+          <p className="font-semibold text-gray-900">
+            ${(item.price * item.quantity).toFixed(2)}
+          </p>
+        </div>
+      </div>
+    ))}
+    
+    {/* ✅ NEW: Show Prescription Images */}
+    {order.prescriptionImages && order.prescriptionImages.length > 0 && (
+      <div className="bg-white rounded-lg p-4 border border-gray-200">
+        <p className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
+          📸 Prescription Images
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {order.prescriptionImages.map((url, i) => (
+            <a 
+              key={i} 
+              href={url} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block border border-gray-200 rounded-lg overflow-hidden hover:border-blue-500 hover:shadow-md transition-all"
+            >
+              <img 
+                src={url} 
+                alt={`Prescription ${i + 1}`} 
+                className="w-full h-32 object-cover"
+              />
+              <div className="bg-gray-50 px-2 py-1 text-xs text-center text-gray-600">
+                View Full Size
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    )}
+  </div>
+)}
                 </div>
               </div>
             ))}

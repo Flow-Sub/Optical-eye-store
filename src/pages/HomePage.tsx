@@ -205,9 +205,21 @@ const flowingMenuItems = [
 
 export function HomePage() {
   const { products, loading } = useProducts();
-  const featuredProducts = products.slice(0, 4);
-  const newArrivals = products.slice(0, 2);
-  const bestsellers = products.slice(2, 4);
+  // ✅ UPDATED: Filter specific products by name from Airtable
+const targetProductNames = {
+  newArrivals: ['Aurora – Light Tortoise', 'Reed – Matte Black'],
+  bestsellers: ['Lennon – Transparent', 'Grace – Champagne']
+};
+
+const newArrivals = products.filter(p => 
+  targetProductNames.newArrivals.some(name => p.name.includes(name.split(' – ')[0]))
+).slice(0, 2); // Max 2
+
+const bestsellers = products.filter(p => 
+  targetProductNames.bestsellers.some(name => p.name.includes(name.split(' – ')[0]))
+).slice(0, 2); // Max 2
+
+const featuredProducts = products.slice(0, 4); // Keep original for Featured Collection
 
   // Hero Slider State
   const [currentSlide, setCurrentSlide] = React.useState(0);
@@ -299,72 +311,104 @@ export function HomePage() {
       </section>
 
       {/* NEW ARRIVALS */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-light text-gray-900">New Arrivals</h2>
-            <Link to="/products?filter=new" className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1">
-              <span>View all</span>
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
+      {/* NEW ARRIVALS */}
+<section className="py-20 bg-white">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-12 animate-fadeIn">
+      <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">New Arrivals</h2>
+      <p className="text-gray-600 max-w-2xl mx-auto">Fresh styles just landed</p>
+    </div>
 
-          {loading ? (
-            <div className="text-center py-16">
-              <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 gap-12">
-              {newArrivals.map((_, i) => (
-                <div key={i} className="group">
-                  <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
-                    <img
-                      src={i === 0 ? IMAGES.newArr1 : IMAGES.newArr2}
-                      alt="New arrival"
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="text-center">
-                    <h3 className="font-light text-gray-900 text-lg">{i === 0 ? 'Aurora – Light Tortoise' : 'Reed – Matte Black'}</h3>
-                    <p className="text-gray-600 mt-1">${i === 0 ? '169' : '149'}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+    {loading ? (
+      <div className="text-center py-16">
+        <div className="inline-block animate-spin rounded-full h-10 w-10 border-b-2 border-gray-900"></div>
+      </div>
+    ) : newArrivals.length > 0 ? (
+      <>
+        <div className="grid md:grid-cols-2 gap-12">
+          {newArrivals.map((product) => (
+            <Link to={`/products/${product.id}`} key={product.id} className="group">
+              <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
+                <img
+                  src={product.images[0] || 'https://via.placeholder.com/500'}
+                  alt={product.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+              </div>
+              <div className="text-center">
+                <h3 className="font-light text-gray-900 text-lg">{product.name}</h3>
+                <p className="text-gray-600 mt-1">${product.price.toFixed(2)}</p>
+              </div>
+            </Link>
+          ))}
         </div>
-      </section>
+        
+        {/* ✅ ADD THIS - View All Link */}
+        <div className="text-center mt-12">
+          <Link
+            to="/products?filter=new-arrivals"
+            className="inline-flex items-center space-x-2 text-gray-900 font-medium hover:text-gray-600 transition-colors group"
+          >
+            <span>View All New Arrivals</span>
+            <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+      </>
+    ) : (
+      <div className="text-center py-16 text-gray-500">
+        <p>No new arrivals found. Add products named "Aurora" and "Reed" in Airtable.</p>
+      </div>
+    )}
+  </div>
+</section>
 
       {/* BESTSELLERS */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-light text-gray-900">Bestsellers</h2>
-            <Link to="/products?filter=bestsellers" className="text-sm text-gray-600 hover:text-gray-900 flex items-center space-x-1">
-              <span>View all</span>
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
+{/* BESTSELLERS */}
+<section className="py-20 bg-gray-50">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="text-center mb-12 animate-fadeIn">
+      <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-3">Bestsellers</h2>
+      <p className="text-gray-600 max-w-2xl mx-auto">Customer favorites</p>
+    </div>
 
-          <div className="grid md:grid-cols-2 gap-12">
-            {bestsellers.map((_, i) => (
-              <div key={i} className="group">
-                <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
-                  <img
-                    src={i === 0 ? IMAGES.bestSell1 : IMAGES.bestSell2}
-                    alt="Bestseller"
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                </div>
-                <div className="text-center">
-                  <h3 className="font-light text-gray-900 text-lg">{i === 0 ? 'Lennon – Transparent' : 'Grace – Champagne'}</h3>
-                  <p className="text-gray-600 mt-1">${i === 0 ? '159' : '179'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="grid md:grid-cols-2 gap-12">
+      {bestsellers.length > 0 ? (
+        bestsellers.map((product) => (
+          <Link to={`/products/${product.id}`} key={product.id} className="group">
+            <div className="aspect-[4/5] bg-white rounded-lg overflow-hidden mb-6 shadow-sm group-hover:shadow-md transition-shadow">
+              <img
+                src={product.images[0] || 'https://via.placeholder.com/500'}
+                alt={product.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+            </div>
+            <div className="text-center">
+              <h3 className="font-light text-gray-900 text-lg">{product.name}</h3>
+              <p className="text-gray-600 mt-1">${product.price.toFixed(2)}</p>
+            </div>
+          </Link>
+        ))
+      ) : (
+        <div className="col-span-2 text-center py-16 text-gray-500">
+          <p>No bestsellers found. Add products named "Lennon" and "Grace" in Airtable.</p>
         </div>
-      </section>
+      )}
+    </div>
+    
+    {/* ✅ ADD THIS - View All Link */}
+    {bestsellers.length > 0 && (
+      <div className="text-center mt-12">
+        <Link
+          to="/products?filter=bestsellers"
+          className="inline-flex items-center space-x-2 text-gray-900 font-medium hover:text-gray-600 transition-colors group"
+        >
+          <span>View All Bestsellers</span>
+          <ChevronRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+    )}
+  </div>
+</section>
 
       {/* NEW: Flowing Menu Collections (Added above SERVICES) */}
       <section className="py-20 bg-black"> {/* Updated: Changed bg-gray-50 to bg-black */}
@@ -524,11 +568,14 @@ export function HomePage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-6">Visit Our Store</h2>
-              <p className="text-gray-600 mb-6">Experience our premium eyewear in person. Our expert staff is ready to help you find the perfect frames.</p>
+              <p className="text-gray-600 mb-6">
+                Your new favourite, family-friendly eye care specialist! Led by a consultant ophthalmologist, 
+                our experienced team is proud to offer exceptional & affordable eye care for you and your family.
+              </p>
               <div className="space-y-2 text-gray-600 mb-8">
-                <p><strong>Address:</strong> 123 Vision Street, City, ST 12345</p>
-                <p><strong>Phone:</strong> (555) 123-4567</p>
-                <p><strong>Email:</strong> hello@opticalstore.com</p>
+                <p><strong>Address:</strong> 1 Regent Rd, Altrincham WA14 1RY</p>
+                <p><strong>Phone:</strong> 0161 928 1891</p>
+                <p><strong>Email:</strong> info@optieyecare.co.uk</p>
               </div>
               <Link
                 to="/appointments"

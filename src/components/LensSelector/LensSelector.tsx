@@ -339,8 +339,8 @@ export function LensSelector({ isOpen, onClose, onAdd, productName, product }: L
                     <Info className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm font-light text-gray-700">
                       We'll contact you within 24 hours to get your prescription. Or email it to{' '}
-                      <a href="mailto:prescriptions@opticalstore.com" className="text-blue-600 hover:underline">
-                        prescriptions@opticalstore.com
+                      <a href="mailto:prescriptions@Optieye Care.com" className="text-blue-600 hover:underline">
+                        prescriptions@Optieye Care.com
                       </a>
                     </p>
                   </div>

@@ -43,7 +43,7 @@ export function Header() {
                     <div className="text-lg font-medium tracking-tight text-gray-900
                                     animate-shimmer bg-clip-text text-transparent
                                     bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900">
-                      OpticalStore
+                      Optieye Care
                     </div>
                     <div className="text-xs text-gray-500 -mt-0.5 font-light">Vision Perfected</div>
                   </div>

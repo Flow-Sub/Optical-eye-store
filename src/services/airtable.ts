@@ -302,6 +302,7 @@ export interface Order {
   numberOfItems: number;
   orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
   orderDate: string;
+  prescriptionImages?: string[]; // ✅ ADD THIS
 }
 
 const mapAirtableToOrder = (record: any): Order => {
@@ -321,31 +322,35 @@ const mapAirtableToOrder = (record: any): Order => {
     numberOfItems: parseInt(fields['Number of Items']) || 0,
     orderStatus: fields['Order Status'] || 'pending',
     orderDate: fields['Order Date'] || new Date().toISOString(),
+    prescriptionImages: fields['Prescription Images']?.map((img: any) => img.url) || [], // ✅ ADD THIS
   };
 };
 
 // Create order
 export const createOrder = async (orderData: Omit<Order, 'id'>): Promise<Order> => {
   try {
-    const record = await base(ORDERS_TABLE).create(
-      {
-        'Order ID': orderData.orderId,
-        'Customer Name': orderData.customerName,
-        'Customer Email': orderData.customerEmail,
-        'Customer Phone': orderData.customerPhone,
-        'Shipping Address': orderData.shippingAddress,
-        'Order Items': orderData.orderItems,
-        'Subtotal': orderData.subtotal,
-        'Shipping Cost': orderData.shippingCost,
-        'Tax': orderData.tax,
-        'Order Total': orderData.orderTotal,
-        'Number of Items': orderData.numberOfItems,
-        'Order Status': orderData.orderStatus,
-        'Order Date': orderData.orderDate,
-      },
-      { typecast: true }
-    );
+    const fields: any = {
+      'Order ID': orderData.orderId,
+      'Customer Name': orderData.customerName,
+      'Customer Email': orderData.customerEmail,
+      'Customer Phone': orderData.customerPhone,
+      'Shipping Address': orderData.shippingAddress,
+      'Order Items': orderData.orderItems,
+      'Subtotal': orderData.subtotal,
+      'Shipping Cost': orderData.shippingCost,
+      'Tax': orderData.tax,
+      'Order Total': orderData.orderTotal,
+      'Number of Items': orderData.numberOfItems,
+      'Order Status': orderData.orderStatus,
+      'Order Date': orderData.orderDate,
+    };
 
+    // ✅ ADD THIS: If prescription images exist, upload them
+    if (orderData.prescriptionImages && orderData.prescriptionImages.length > 0) {
+      fields['Prescription Images'] = orderData.prescriptionImages.map(url => ({ url }));
+    }
+
+    const record = await base(ORDERS_TABLE).create(fields, { typecast: true });
     return mapAirtableToOrder(record);
   } catch (error: any) {
     console.error('Error creating order:', error);

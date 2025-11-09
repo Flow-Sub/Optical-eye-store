@@ -290,6 +290,31 @@ export function OrdersView() {
                           <div>
                             <p className="font-medium text-gray-900">{item.productName}</p>
                             <p className="text-sm text-gray-600 font-light">{item.brand}</p>
+                            
+                            {/* ✅ ADD PRESCRIPTION INFO */}
+                            {item.prescriptionData && (
+                              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
+                                <p className="font-medium text-blue-900">📋 Prescription Added</p>
+                                {item.prescriptionData.rightEye?.sphere && (
+                                  <p className="text-blue-700 mt-1">
+                                    OD: SPH {item.prescriptionData.rightEye.sphere} / 
+                                    CYL {item.prescriptionData.rightEye.cylinder} / 
+                                    AXIS {item.prescriptionData.rightEye.axis}
+                                  </p>
+                                )}
+                                {item.prescriptionData.leftEye?.sphere && (
+                                  <p className="text-blue-700">
+                                    OS: SPH {item.prescriptionData.leftEye.sphere} / 
+                                    CYL {item.prescriptionData.leftEye.cylinder} / 
+                                    AXIS {item.prescriptionData.leftEye.axis}
+                                  </p>
+                                )}
+                                {item.prescriptionData.pd && (
+                                  <p className="text-blue-700">PD: {item.prescriptionData.pd}mm</p>
+                                )}
+                              </div>
+                            )}
+                            
                             <div className="flex items-center gap-3 mt-2">
                               <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-medium">
                                 Qty: {item.quantity}
@@ -305,6 +330,26 @@ export function OrdersView() {
                         </div>
                       </div>
                     ))}
+                    
+                    {/* ✅ ADD PRESCRIPTION IMAGES */}
+                    {order.prescriptionImages && order.prescriptionImages.length > 0 && (
+                      <div className="bg-white rounded-lg p-3 border border-gray-200">
+                        <p className="text-sm font-medium text-gray-900 mb-2">📸 Prescription Images:</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {order.prescriptionImages.map((url, i) => (
+                            <a 
+                              key={i} 
+                              href={url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block border rounded hover:opacity-75"
+                            >
+                              <img src={url} alt={`Prescription ${i+1}`} className="w-full h-24 object-cover rounded" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 

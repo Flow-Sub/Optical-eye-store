@@ -60,17 +60,25 @@ export interface PrescriptionData {
   };
   pd: string;
   notes?: string;
+  uploadedImageUrl?: string; // ✅ ADD THIS
 }
 
 export interface Order {
   id: string;
-  userId: string;
-  items: CartItem[];
-  total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  shippingAddress: ShippingAddress;
-  createdAt: string;
-  updatedAt: string;
+  orderId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  shippingAddress: string;
+  orderItems: string; // JSON string
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  orderTotal: number;
+  numberOfItems: number;
+  orderStatus: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  orderDate: string;
+  prescriptionImages?: string[]; // ✅ ADD THIS
 }
 
 export interface ShippingAddress {

@@ -13,7 +13,7 @@ export function AboutPage() {
   ];
 
   const milestones = [
-    { year: '1985', event: 'OpticalStore founded by Dr. Robert Smith' },
+    { year: '1985', event: 'Optieye Care founded by Dr. Robert Smith' },
     { year: '1992', event: 'Expanded to include contact lens services' },
     { year: '2001', event: 'Introduced digital eye examination technology' },
     { year: '2010', event: 'Added pediatric eye care specialization' },
@@ -30,7 +30,7 @@ export function AboutPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-gray-900 mb-6">
-                About OpticalStore
+                About Optieye Care
               </h1>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
                 For nearly four decades, we've been your trusted partner in eye care, combining traditional values with modern technology.
@@ -65,7 +65,7 @@ export function AboutPage() {
               <h2 className="text-2xl md:text-3xl font-light text-gray-900 mb-6">Our Story</h2>
               <div className="space-y-4 text-gray-700 leading-relaxed">
                 <p>
-                  OpticalStore began in 1985 when Dr. Robert Smith opened a small practice with a simple mission: to provide exceptional eye care with a personal touch.
+                  Optieye Care began in 1985 when Dr. Robert Smith opened a small practice with a simple mission: to provide exceptional eye care with a personal touch.
                 </p>
                 <p>
                   Over the years, we've embraced new technologies and expanded our services, but our core values remain unchanged.
@@ -200,7 +200,7 @@ export function AboutPage() {
                 {[
                   { Icon: MapPin, title: 'Address', lines: ['123 Vision Street', 'City, State 12345'] },
                   { Icon: Phone, title: 'Phone', lines: ['(555) 123-4567'] },
-                  { Icon: Mail, title: 'Email', lines: ['info@opticalstore.com'] },
+                  { Icon: Mail, title: 'Email', lines: ['info@optieyecare.co.uks'] },
                   { Icon: Clock, title: 'Hours', lines: ['Mon–Fri: 9AM–7PM', 'Sat: 9AM–6PM', 'Sun: 11AM–5PM'] }
                 ].map((c, i) => (
                   <div key={i} className="flex items-start space-x-4">

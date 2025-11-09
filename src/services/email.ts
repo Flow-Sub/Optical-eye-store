@@ -20,7 +20,7 @@ export const sendAppointmentEmail = async (data: AppointmentEmailData): Promise<
       body: JSON.stringify({
         access_key: '568d3b0c-8449-48ec-b065-7f9674686c51',
         subject: `✅ Appointment Confirmed - ${data.appointment_date}`,
-        from_name: 'OpticalStore',
+        from_name: 'Optieye Care',
         from_email: 'eyeoptical007@gmail.com',
         to_email: data.customer_email,
         message: `
@@ -68,10 +68,10 @@ NEED TO RESCHEDULE?
 We look forward to seeing you! 👋
 
 Best regards,
-The OpticalStore Team
+The Optieye Care Team
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-© 2024 OpticalStore. All rights reserved.
+© 2024 Optieye Care. All rights reserved.
         `.trim()
       })
     });

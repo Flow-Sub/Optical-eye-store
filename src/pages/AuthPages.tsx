@@ -40,7 +40,7 @@ export function LoginPage() {
               <Eye className="h-7 w-7 text-gray-900" />
             </div>
             <div className="text-left">
-              <div className="text-2xl font-light tracking-tight text-gray-900">OpticalStore</div>
+              <div className="text-2xl font-light tracking-tight text-gray-900">Optieye Care</div>
               <div className="text-xs text-gray-500 font-light">Vision Perfected</div>
             </div>
           </Link>
@@ -200,7 +200,7 @@ export function RegisterPage() {
               <Eye className="h-7 w-7 text-gray-900" />
             </div>
             <div className="text-left">
-              <div className="text-2xl font-light tracking-tight text-gray-900">OpticalStore</div>
+              <div className="text-2xl font-light tracking-tight text-gray-900">Optieye Care</div>
               <div className="text-xs text-gray-500 font-light">Vision Perfected</div>
             </div>
           </Link>

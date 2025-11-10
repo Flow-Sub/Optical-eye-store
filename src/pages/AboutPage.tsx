@@ -1,5 +1,4 @@
-import React from 'react';
-import { Eye, Award, Users, Heart, Clock, MapPin, Phone, Mail, Calendar, AlertCircle, User } from 'lucide-react';
+import { Eye, Award, Users, Heart, Clock, MapPin, Phone, Mail, AlertCircle, User } from 'lucide-react';
 import { useTeamMembers } from '../hooks/useTeamMembers';
 
 export function AboutPage() {

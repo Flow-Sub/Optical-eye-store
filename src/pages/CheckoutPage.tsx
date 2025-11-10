@@ -4,6 +4,7 @@ import { ArrowLeft, CreditCard, Truck, Shield, CheckCircle, Sparkles } from 'luc
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { createOrder, updateProductStock } from '../services/airtable';
+import { formatCurrency } from '../lib/currency';
 
 export function CheckoutPage() {
   const { items, total, clearCart } = useCart();
@@ -152,7 +153,7 @@ export function CheckoutPage() {
                 <strong className="font-medium">Order Number:</strong> #ORD-{Date.now().toString().slice(-6)}
               </p>
               <p className="text-gray-700 font-light mt-2">
-                <strong className="font-medium">Total:</strong> ${finalTotal.toFixed(2)}
+                <strong className="font-medium">Total:</strong> {formatCurrency(finalTotal)}
               </p>
             </div>
             <Link
@@ -361,8 +362,8 @@ export function CheckoutPage() {
                         )}
                       </div>
                       <p className="text-sm font-medium text-gray-900">
-                        ${((item.product.price + (item.lensOption?.price || 0) + 
-                           (item.coatings?.reduce((sum, c) => sum + c.price, 0) || 0)) * item.quantity).toFixed(2)}
+                        {formatCurrency((item.product.price + (item.lensOption?.price || 0) + 
+                           (item.coatings?.reduce((sum, c) => sum + c.price, 0) || 0)) * item.quantity)}
                       </p>
                     </div>
                   ))}
@@ -371,21 +372,21 @@ export function CheckoutPage() {
                 <div className="border-t border-gray-200 pt-4 space-y-2 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 font-light">Subtotal</span>
-                    <span className="text-gray-900 font-medium">${total.toFixed(2)}</span>
+                    <span className="text-gray-900 font-medium">{formatCurrency(total)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 font-light">Shipping</span>
                     <span className="text-gray-900 font-medium">
-                      {shippingCost === 0 ? 'Free' : `$${shippingCost.toFixed(2)}`}
+                      {shippingCost === 0 ? 'Free' : formatCurrency(shippingCost)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 font-light">Tax</span>
-                    <span className="text-gray-900 font-medium">${tax.toFixed(2)}</span>
+                    <span className="text-gray-900 font-medium">{formatCurrency(tax)}</span>
                   </div>
                   <div className="border-t border-gray-200 pt-3 flex justify-between">
                     <span className="font-semibold text-gray-900">Total</span>
-                    <span className="text-xl font-bold text-gray-900">${finalTotal.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-gray-900">{formatCurrency(finalTotal)}</span>
                   </div>
                 </div>
 

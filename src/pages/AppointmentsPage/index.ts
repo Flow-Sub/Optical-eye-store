@@ -1,0 +1,2 @@
+export { AppointmentsPage } from './AppointmentsPage';
+

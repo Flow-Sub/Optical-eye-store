@@ -1,12 +1,13 @@
 import React from 'react';
-import { Calendar, Clock, MapPin, Phone, CheckCircle, ChevronRight, Sparkles, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Phone, CheckCircle, Sparkles, AlertCircle } from 'lucide-react';
 import { useServices } from '../hooks/useServices';
+import { formatCurrency } from '../lib/currency';
 
 export function AppointmentsPage() {
   const { services, loading, error } = useServices(true); // Fetch only active services
 
   const formatPrice = (price: number) => {
-    return price === 0 ? 'Complimentary' : `$${price}`;
+    return price === 0 ? 'Complimentary' : formatCurrency(price);
   };
 
   const formatDuration = (minutes: number) => {
@@ -226,14 +227,14 @@ export function AppointmentsPage() {
             </a>
             <a
               href="/contact"
-              className="bg-gray-900 text-white px-8 py-3 font-light hover:bg-gray-800 transition-all duration-300 inline-flex items-center justify-center space-x-2 group"
+              className="bg-gray-900 text-white px-8 py-3 font-light hover:bg-gray-800 transition-all duration-300 inline-flex items-center justify-center space-x-2"
             >
               <span>Contact Form</span>
-              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
           </div>
         </div>
       </section>
     </div>
+    
   );
 }

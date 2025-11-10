@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Check, Upload, Camera, FileText, Eye, Info, ChevronLeft } from 'lucide-react';
 import { LensOption, LensCoating, PrescriptionData, Product } from '../../types';
 import { useProductLensOptions } from '../../hooks/useProductLensOptions';
+import { formatCurrency } from '../../lib/currency';
 
 interface LensSelectorProps {
   isOpen: boolean;
@@ -166,7 +167,7 @@ export function LensSelector({ isOpen, onClose, onAdd, productName, product }: L
                         <h4 className="font-light text-gray-900">{lens.name}</h4>
                         <p className="text-sm text-gray-600 mt-1">{lens.description}</p>
                       </div>
-                      <span className="text-lg font-light text-gray-900">+${lens.price}</span>
+                      <span className="text-lg font-light text-gray-900">+{formatCurrency(lens.price)}</span>
                     </div>
                     {selectedLens?.id === lens.id && (
                       <div className="flex items-center gap-2 text-gray-900">
@@ -205,7 +206,7 @@ export function LensSelector({ isOpen, onClose, onAdd, productName, product }: L
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h4 className="font-light text-gray-900">{coating.name}</h4>
-                      <span className="text-lg font-light text-gray-900">+${coating.price}</span>
+                      <span className="text-lg font-light text-gray-900">+{formatCurrency(coating.price)}</span>
                     </div>
                     <p className="text-sm text-gray-600">{coating.description}</p>
                     {selectedCoatings.some(c => c.id === coating.id) && (
@@ -356,7 +357,7 @@ export function LensSelector({ isOpen, onClose, onAdd, productName, product }: L
             <div>
               <span className="text-sm text-gray-600">Lens total:</span>
               <span className="ml-2 text-xl font-light text-gray-900">
-                ${calculateTotal().toFixed(2)}
+                {formatCurrency(calculateTotal())}
               </span>
             </div>
             <div className="flex gap-3">

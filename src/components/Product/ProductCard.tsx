@@ -5,6 +5,7 @@ import { ShoppingCart, Star, Eye, Heart, Zap, Sparkles, Bell } from 'lucide-reac
 import { Product } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import { WishlistButton } from '../Wishlist/WishlistButton';
+import { formatCurrency } from '../../lib/currency';
 
 interface ProductCardProps {
   product: Product;
@@ -145,7 +146,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="flex items-center justify-between">
           <div>
             <span className="text-2xl font-light text-gray-900">
-              ${product.price.toFixed(2)}
+              {formatCurrency(product.price)}
             </span>
             {product.lensCompatible && (
               <span className="ml-2 text-sm text-gray-500">+ lens</span>

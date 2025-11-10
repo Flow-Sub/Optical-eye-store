@@ -10,6 +10,7 @@ import { fetchProductById } from '../services/airtable';
 import { useCart } from '../contexts/CartContext';
 import { LensSelector } from '../components/LensSelector/LensSelector';
 import { LensOption, LensCoating, PrescriptionData, Product } from '../types';
+import { formatCurrency } from '../lib/currency';
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -230,7 +231,7 @@ export function ProductDetailPage() {
                 {/* Price */}
                 <div className="mt-6">
                   <span className="text-5xl font-light text-gray-900">
-                    ${product.price.toFixed(2)}
+                    {formatCurrency(product.price)}
                   </span>
                   {product.lensCompatible && (
                     <span className="ml-2 text-gray-500 text-lg">+ lens options</span>
@@ -300,7 +301,7 @@ export function ProductDetailPage() {
               {/* ── GUARANTEES (now HomePage‑style cards) ── */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
                 {[
-                  { Icon: Truck, title: 'Free Shipping', desc: 'On orders over $150' },
+                  { Icon: Truck, title: 'Free Shipping', desc: 'On orders over £150' },
                   { Icon: RotateCcw, title: '90‑Day Returns', desc: 'Satisfaction guaranteed' },
                   { Icon: Shield, title: '2‑Year Warranty', desc: 'Premium protection' }
                 ].map((g, i) => (

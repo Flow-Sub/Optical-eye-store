@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
-  Eye, ShoppingCart, User, Menu, X, Search, ChevronDown,
+  ShoppingCart, User, Menu, X, Search, ChevronDown,
   LogOut, Settings, Package
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -17,8 +17,8 @@ export function Header() {
   const navigation = [
     { name: 'Home', href: '/' },
     { name: 'Shop', href: '/products' },
-    { name: 'Appointments', href: '/services' },
-    // { name: 'Services', href: '/appointments' },
+    { name: 'Services', href: '/services' },
+    { name: 'Book Now', href: '/appointments' },
     { name: 'About', href: '/about' }
   ];
 
@@ -36,8 +36,12 @@ export function Header() {
 
                 {/* ── LOGO ── */}
                 <Link to="/" className="flex items-center space-x-3 group">
-                  <div className="p-2 bg-gradient-to-br from-gray-50 to-white rounded-full border border-white/40 shadow-inner">
-                    <Eye className="h-5 w-5 text-gray-900" />
+                  <div className="h-10 w-10 rounded-full overflow-hidden shadow-md flex-shrink-0">
+                    <img 
+                      src="https://optica-stock-images-storage.sfo3.digitaloceanspaces.com/1762743886702_WhatsApp%20Image%202025-11-09%20at%209.05.04%20PM.jpeg" 
+                      alt="Optieye Care Logo" 
+                      className="h-full w-full object-cover"
+                    />
                   </div>
                   <div>
                     <div className="text-lg font-medium tracking-tight text-gray-900

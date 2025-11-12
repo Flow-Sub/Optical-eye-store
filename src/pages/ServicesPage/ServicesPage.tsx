@@ -17,12 +17,21 @@ import {
 export function ServicesPage() {
   // Fetch data
   const { locations, loading: locationsLoading, error: locationsError } = useStoreLocations();
+  
+  // Fetch general services for display on the page
   const { 
-    services: dynamicServices, 
-    loading: servicesLoading, 
-    error: servicesError,
-    refetch: refetchServices 
-  } = useServices(true);
+    services: generalServices, 
+    loading: generalServicesLoading, 
+    error: generalServicesError,
+    refetch: refetchGeneralServices 
+  } = useServices(true, 'general');
+  
+  // Fetch product services for booking modal
+  const { 
+    services: productServices, 
+    loading: productServicesLoading, 
+    error: productServicesError
+  } = useServices(true, 'product');
 
   // Booking flow management
   const {
@@ -50,20 +59,23 @@ export function ServicesPage() {
     return cleanup;
   }, []);
 
-  // Format services for UI
-  const formattedServices = formatServicesForUI(dynamicServices);
+  // Format services for UI - general services for display
+  const formattedGeneralServices = formatServicesForUI(generalServices);
+  
+  // Format services for UI - product services for booking
+  const formattedProductServices = formatServicesForUI(productServices);
 
   // Handle loading states
-  if (locationsLoading || servicesLoading) {
+  if (locationsLoading || generalServicesLoading || productServicesLoading) {
     return <LoadingSpinner message="Loading services and locations..." />;
   }
 
   // Handle error states
-  if (locationsError || servicesError) {
+  if (locationsError || generalServicesError || productServicesError) {
     return (
       <ErrorMessage
-        message={locationsError || servicesError || 'Failed to load data'}
-        onRetry={servicesError ? refetchServices : undefined}
+        message={locationsError || generalServicesError || productServicesError || 'Failed to load data'}
+        onRetry={generalServicesError ? refetchGeneralServices : undefined}
       />
     );
   }
@@ -76,8 +88,8 @@ export function ServicesPage() {
       {/* Locations Section */}
       <LocationsSection locations={locations} onBookClick={openBookingFlow} />
 
-      {/* Services Section */}
-      <ServicesSection services={formattedServices} />
+      {/* Services Section - Display general services */}
+      <ServicesSection services={formattedGeneralServices} />
 
       {/* Why Choose Us Section */}
       <WhyChooseUsSection />
@@ -85,12 +97,12 @@ export function ServicesPage() {
       {/* FAQ Section */}
       <FAQSection onBookClick={() => openBookingFlow()} />
 
-      {/* Booking Modal */}
+      {/* Booking Modal - Use product services */}
       <BookingModal
         isOpen={showBookingModal}
         onClose={closeBookingFlow}
         locations={locations}
-        services={formattedServices}
+        services={formattedProductServices}
         bookingStep={bookingStep}
         selectedLocation={selectedLocation}
         selectedService={selectedService}

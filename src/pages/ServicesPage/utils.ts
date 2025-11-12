@@ -4,18 +4,38 @@ import { DEFAULT_SERVICE_IMAGE, CALENDLY_CONFIG } from './constants';
 import { formatCurrency } from '../../lib/currency';
 
 /**
+ * Validates if a service object has all required fields
+ */
+function isValidService(service: any): boolean {
+  return (
+    service &&
+    typeof service._id === 'string' &&
+    typeof service.serviceName === 'string' &&
+    typeof service.duration === 'number' &&
+    typeof service.price === 'number'
+  );
+}
+
+/**
  * Formats raw service data from API for UI display
  */
 export function formatServicesForUI(services: Service[]): FormattedService[] {
-  return services.map((service) => ({
-    id: service._id,
-    title: service.serviceName,
-    duration: `${service.duration} min`,
-    price: formatCurrency(service.price),
-    description: service.description,
-    image: service.image || DEFAULT_SERVICE_IMAGE,
-    features: [] // API doesn't provide features
-  }));
+  if (!services || !Array.isArray(services)) {
+    console.warn('formatServicesForUI: Invalid services input:', services);
+    return [];
+  }
+  
+  return services
+    .filter(isValidService)
+    .map((service) => ({
+      id: service._id,
+      title: service.serviceName,
+      duration: `${service.duration} min`,
+      price: formatCurrency(service.price),
+      description: service.description || '',
+      image: service.image || DEFAULT_SERVICE_IMAGE,
+      features: [] // API doesn't provide features
+    }));
 }
 
 /**

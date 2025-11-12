@@ -9,6 +9,7 @@ import {
 import { fetchProductById } from '../services/airtable';
 import { useCart } from '../contexts/CartContext';
 import { LensSelector } from '../components/LensSelector/LensSelector';
+import { FittingBoxVTO, VTO_PRODUCT_MATCHER } from '../components/VTO';
 import { LensOption, LensCoating, PrescriptionData, Product } from '../types';
 import { formatCurrency } from '../lib/currency';
 
@@ -130,11 +131,11 @@ export function ProductDetailPage() {
             {/* ── IMAGE SECTION ── */}
             <div className="space-y-6">
               {/* Main Image (full‑bleed on lg) */}
-              <div className="relative aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-sm group">
+              <div className="relative aspect-square bg-white rounded-xl overflow-hidden shadow-sm group flex items-center justify-center p-8 border border-gray-200">
                 <img
                   src={product.images[selectedImageIndex]}
                   alt={product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                 />
 
                 {/* Stock Badges */}
@@ -180,13 +181,13 @@ export function ProductDetailPage() {
                     <button
                       key={i}
                       onClick={() => setSelectedImageIndex(i)}
-                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      className={`aspect-square rounded-lg overflow-hidden border-2 transition-all bg-white flex items-center justify-center p-2 ${
                         i === selectedImageIndex
                           ? 'border-gray-900 ring-2 ring-gray-300'
                           : 'border-gray-300 hover:border-gray-500'
                       }`}
                     >
-                      <img src={img} alt={`view ${i + 1}`} className="w-full h-full object-cover" />
+                      <img src={img} alt={`view ${i + 1}`} className="w-full h-full object-contain" />
                     </button>
                   ))}
                 </div>
@@ -267,6 +268,14 @@ export function ProductDetailPage() {
 
               {/* CTA Buttons */}
               <div className="space-y-4 border-t border-gray-200 pt-6">
+                {/* Virtual Try-On Button */}
+                {VTO_PRODUCT_MATCHER.shouldShowVTO(product.name) && (
+                  <FittingBoxVTO 
+                    productName={product.name}
+                    eanCode={VTO_PRODUCT_MATCHER.getEANForProduct(product.name) || undefined}
+                  />
+                )}
+
                 <button
                   onClick={directAdd}
                   disabled={product.stock === 0}

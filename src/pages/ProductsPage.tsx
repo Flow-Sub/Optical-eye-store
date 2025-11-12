@@ -99,9 +99,27 @@ export function ProductsPage() {
   return (
     <div className="min-h-screen bg-white">
 
-      {/* HERO */}
-      <section className="bg-white py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* HERO - Full Width Video */}
+      <section className="bg-white">
+        {/* Video Hero - Full Width, No Padding */}
+        <div className="relative w-full aspect-video overflow-hidden">
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          >
+            <source
+              src="https://res.cloudinary.com/dfkbgktjy/video/upload/v1762918624/ETNIA_BNC_24_v3_16x9_refxc3.mp4"
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+
+        {/* COMMENTED OUT - Original Text & Stats Section
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-light tracking-tight text-gray-900 mb-6">
               Shop Eyewear
@@ -110,7 +128,7 @@ export function ProductsPage() {
               Discover our curated collection of premium frames, designer sunglasses, and exclusive accessories.
             </p>
 
-            {/* Stats */}
+            Stats
             <div className="flex flex-wrap justify-center gap-8 mt-12">
               <div className="text-center">
                 <p className="text-3xl font-light text-gray-900">{products.length}</p>
@@ -127,6 +145,7 @@ export function ProductsPage() {
             </div>
           </div>
         </div>
+        */}
       </section>
 
       {/* MAIN CONTENT */}

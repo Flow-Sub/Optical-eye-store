@@ -41,11 +41,14 @@ export function ServicesPage() {
   // NEW: Fetch dynamic locations
   const { locations, loading: locationsLoading } = useStoreLocations();
   
-  // Fetch dynamic services (active only)
-  const { services: dynamicServices, loading: servicesLoading } = useServices(true);
+  // Fetch general services for display on the page
+  const { services: generalServices, loading: generalServicesLoading } = useServices(true, 'general');
+  
+  // Fetch product services for booking modal
+  const { services: productServices, loading: productServicesLoading } = useServices(true, 'product');
 
   // If loading, show spinner
-  if (locationsLoading || servicesLoading) {
+  if (locationsLoading || generalServicesLoading || productServicesLoading) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center pt-28">
         <div className="text-center">
@@ -113,13 +116,24 @@ export function ServicesPage() {
     }
   };
 
-  // Format services for UI display
-  const services = dynamicServices.map((service) => ({
+  // Format general services for display
+  const generalServicesFormatted = (generalServices || []).map((service) => ({
     id: service._id,
     title: service.serviceName,
     duration: `${service.duration} min`,
-    price: `$${service.price}`,
-    description: service.description,
+    price: `£${service.price}`,
+    description: service.description || '',
+    image: service.image || 'https://images.pexels.com/photos/5752254/pexels-photo-5752254.jpeg?auto=compress&cs=tinysrgb&w=600',
+    features: [] // API doesn't provide features, so we'll handle this in UI
+  }));
+  
+  // Format product services for booking modal
+  const productServicesFormatted = (productServices || []).map((service) => ({
+    id: service._id,
+    title: service.serviceName,
+    duration: `${service.duration} min`,
+    price: `£${service.price}`,
+    description: service.description || '',
     image: service.image || 'https://images.pexels.com/photos/5752254/pexels-photo-5752254.jpeg?auto=compress&cs=tinysrgb&w=600',
     features: [] // API doesn't provide features, so we'll handle this in UI
   }));
@@ -243,7 +257,7 @@ export function ServicesPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {services.map((service) => (
+            {generalServicesFormatted.map((service) => (
               <div
                 key={service.id}
                 className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300"
@@ -429,7 +443,7 @@ export function ServicesPage() {
                   </div>
 
                   <div className="space-y-5">
-                    {services.map((service) => (
+                    {productServicesFormatted.map((service) => (
                       <div
                         key={service.id}
                         onClick={() => handleServiceSelect(service.title)}
@@ -500,7 +514,7 @@ export function ServicesPage() {
                         <p className="text-xs text-gray-500 font-light mb-1">Service</p>
                         <p className="text-gray-900 font-medium">{selectedService}</p>
                         <p className="text-xs text-gray-600 mt-1">
-                          {services.find(s => s.title === selectedService)?.duration}
+                          {productServicesFormatted.find(s => s.title === selectedService)?.duration}
                         </p>
                       </div>
                     </div>

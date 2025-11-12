@@ -29,21 +29,41 @@ export function Footer() {
               offering exceptional & affordable eye care for you and your family.
             </p>
             <div className="flex space-x-4">
+              {/* Instagram */}
               <a 
                 href="https://www.instagram.com/optieyecareuk" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="relative group"
+                aria-label="Visit our Instagram page"
               >
                 <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
                 <Instagram className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
               </a>
-              {[Facebook, Twitter].map((Icon, index) => (
-                <div key={index} className="relative group">
-                  <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
-                  <Icon className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
-                </div>
-              ))}
+
+              {/* Facebook */}
+              <a 
+                href="https://www.facebook.com/optieye/?fref=ts#" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="relative group"
+                aria-label="Visit our Facebook page"
+              >
+                <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
+                <Facebook className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
+              </a>
+
+              {/* Twitter */}
+              <a 
+                href="https://twitter.com/optieyecare" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="relative group"
+                aria-label="Visit our Twitter page"
+              >
+                <div className="absolute inset-0 bg-white/10 rounded-full blur-sm group-hover:blur-md transition-all"></div>
+                <Twitter className="h-5 w-5 text-gray-300 hover:text-white cursor-pointer transition-colors relative z-10" />
+              </a>
             </div>
           </div>
 
@@ -114,8 +134,8 @@ export function Footer() {
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <a href="mailto:info@optieyecare.co.uk" className="text-sm text-gray-300 hover:text-white transition-colors font-light">
-                  info@optieyecare.co.uk
+                <a href="mailto:admin@optieye.com" className="text-sm text-gray-300 hover:text-white transition-colors font-light">
+                  admin@optieye.com
                 </a>
               </div>
             </div>

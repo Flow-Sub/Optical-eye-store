@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, DollarSign, Clock, FileText, Image as ImageIcon, Sparkles, Save } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 interface CreateServiceModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface CreateServiceModalProps {
 }
 
 export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService }: CreateServiceModalProps) {
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -16,6 +18,7 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
   const [formData, setFormData] = useState({
     serviceName: '',
     description: '',
+    serviceTag: 'general' as 'general' | 'product',
     duration: '',
     price: '',
     status: 'active' as 'active' | 'inactive',
@@ -26,6 +29,7 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
       setFormData({
         serviceName: editingService.serviceName || '',
         description: editingService.description || '',
+        serviceTag: editingService.serviceTag || 'general',
         duration: editingService.duration?.toString() || '',
         price: editingService.price?.toString() || '',
         status: editingService.status || 'active',
@@ -41,6 +45,7 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
     setFormData({
       serviceName: '',
       description: '',
+      serviceTag: 'general',
       duration: '',
       price: '',
       status: 'active',
@@ -67,7 +72,7 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
       const uploadFormData = new FormData();
       uploadFormData.append('image', file);
 
-      const response = await fetch('http://134.209.6.174:3000/api/digitalOceanRoutes/uploadImage', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/digitalOceanRoutes/uploadImage`, {
         method: 'POST',
         body: uploadFormData,
       });
@@ -76,14 +81,14 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
 
       if (result.success && result.data?.url) {
         setUploadedImageUrl(result.data.url); // Store the URL
-        alert('✅ Image uploaded successfully!');
+        toast.success('Image uploaded successfully!');
       } else {
-        alert('❌ Failed to upload image: ' + (result.message || 'Unknown error'));
+        toast.error('Failed to upload image: ' + (result.message || 'Unknown error'));
         setImagePreview(null);
       }
     } catch (error) {
       console.error('Image upload error:', error);
-      alert('❌ Failed to upload image. Please try again.');
+      toast.error('Failed to upload image. Please try again.');
       setImagePreview(null);
     } finally {
       setUploadingImage(false);
@@ -95,15 +100,15 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
     
     // Validation
     if (!formData.serviceName.trim()) {
-      alert('Please enter a service name');
+      toast.warning('Please enter a service name');
       return;
     }
     if (!formData.duration || parseInt(formData.duration) <= 0) {
-      alert('Please enter a valid duration');
+      toast.warning('Please enter a valid duration');
       return;
     }
     if (!formData.price || parseFloat(formData.price) < 0) {
-      alert('Please enter a valid price');
+      toast.warning('Please enter a valid price');
       return;
     }
 
@@ -114,6 +119,7 @@ export function CreateServiceModal({ isOpen, onClose, onSuccess, editingService 
       const payload = {
   serviceName: formData.serviceName,
   description: formData.description,
+  serviceTag: formData.serviceTag,
   duration: parseInt(formData.duration),
   price: parseFloat(formData.price),
   status: formData.status,
@@ -137,16 +143,16 @@ const response = await fetch(url, {
       const result = await response.json();
 
       if (result.success) {
+        toast.success(editingService ? 'Service updated successfully!' : 'Service created successfully!');
         onSuccess();
         onClose();
         resetForm();
-        alert(editingService ? '✅ Service updated successfully!' : '✅ Service created successfully!');
       } else {
-        alert('❌ ' + (result.message || 'Failed to save service'));
+        toast.error(result.message || 'Failed to save service');
       }
     } catch (error) {
       console.error('Error saving service:', error);
-      alert('❌ Failed to save service. Please try again.');
+      toast.error('Failed to save service. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -208,6 +214,23 @@ const response = await fetch(url, {
               rows={4}
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 font-light resize-none"
             />
+          </div>
+
+          {/* Service Type */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Service Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.serviceTag}
+              onChange={(e) => setFormData({ ...formData, serviceTag: e.target.value as 'general' | 'product' })}
+              className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-900 focus:border-gray-900 font-light bg-white"
+              required
+            >
+              <option value="general">General</option>
+              <option value="product">Product</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500 font-light">Select whether this is a general service or product-related service</p>
           </div>
 
           {/* Duration and Price Grid */}

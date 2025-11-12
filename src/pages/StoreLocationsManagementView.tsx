@@ -211,7 +211,7 @@ export function StoreLocationsManagementView({ onSuccess }: StoreLocationsManage
                           const uploadFormData = new FormData();
                           uploadFormData.append('image', file);
 
-                          const response = await fetch(`http://134.209.6.174:3000/api/digitalOceanRoutes/uploadImage`, {
+                          const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/digitalOceanRoutes/uploadImage`, {
                             method: 'POST',
                             body: uploadFormData,
                           });

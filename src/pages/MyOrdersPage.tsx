@@ -237,30 +237,120 @@ export function MyOrdersPage() {
               </div>
             )}
             
-            {/* ✅ NEW: Show Prescription Data */}
+            {/* ✅ PRESCRIPTION INFO - PROFESSIONAL UI */}
             {item.prescriptionData && (
-              <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-                <p className="font-medium text-blue-900 mb-1">📋 Prescription Details:</p>
-                {item.prescriptionData.rightEye?.sphere && (
-                  <p className="text-blue-700">
-                    <span className="font-medium">Right Eye:</span> SPH {item.prescriptionData.rightEye.sphere}, 
-                    CYL {item.prescriptionData.rightEye.cylinder}, 
-                    AXIS {item.prescriptionData.rightEye.axis}
-                  </p>
-                )}
-                {item.prescriptionData.leftEye?.sphere && (
-                  <p className="text-blue-700">
-                    <span className="font-medium">Left Eye:</span> SPH {item.prescriptionData.leftEye.sphere}, 
-                    CYL {item.prescriptionData.leftEye.cylinder}, 
-                    AXIS {item.prescriptionData.leftEye.axis}
-                  </p>
-                )}
-                {item.prescriptionData.pd && (
-                  <p className="text-blue-700"><span className="font-medium">PD:</span> {item.prescriptionData.pd}mm</p>
-                )}
-                {item.prescriptionData.notes && (
-                  <p className="text-blue-700 mt-1"><span className="font-medium">Notes:</span> {item.prescriptionData.notes}</p>
-                )}
+              <div className="mt-3 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 shadow-sm">
+                {/* Header */}
+                <div className="flex items-center space-x-2 mb-3 pb-2 border-b border-blue-200">
+                  <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">Prescription Details</p>
+                    <p className="text-xs text-gray-600">Eye Measurement Values</p>
+                  </div>
+                </div>
+
+                {/* Prescription Data */}
+                <div className="space-y-2">
+                  {/* Right Eye (OD) */}
+                  {item.prescriptionData.rightEye?.sphere && (
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-blue-900 bg-blue-100 px-2 py-1 rounded">
+                          OD (Right Eye)
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="text-center">
+                          <p className="text-gray-500 font-medium mb-1">SPH</p>
+                          <p className="text-gray-900 font-semibold bg-gray-50 py-1 rounded">
+                            {item.prescriptionData.rightEye.sphere}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-500 font-medium mb-1">CYL</p>
+                          <p className="text-gray-900 font-semibold bg-gray-50 py-1 rounded">
+                            {item.prescriptionData.rightEye.cylinder}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-500 font-medium mb-1">AXIS</p>
+                          <p className="text-gray-900 font-semibold bg-gray-50 py-1 rounded">
+                            {item.prescriptionData.rightEye.axis}°
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Left Eye (OS) */}
+                  {item.prescriptionData.leftEye?.sphere && (
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-semibold text-green-900 bg-green-100 px-2 py-1 rounded">
+                          OS (Left Eye)
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-2 text-xs">
+                        <div className="text-center">
+                          <p className="text-gray-500 font-medium mb-1">SPH</p>
+                          <p className="text-gray-900 font-semibold bg-gray-50 py-1 rounded">
+                            {item.prescriptionData.leftEye.sphere}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-500 font-medium mb-1">CYL</p>
+                          <p className="text-gray-900 font-semibold bg-gray-50 py-1 rounded">
+                            {item.prescriptionData.leftEye.cylinder}
+                          </p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-gray-500 font-medium mb-1">AXIS</p>
+                          <p className="text-gray-900 font-semibold bg-gray-50 py-1 rounded">
+                            {item.prescriptionData.leftEye.axis}°
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pupillary Distance (PD) */}
+                  {item.prescriptionData.pd && (
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 bg-purple-100 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <span className="text-xs font-medium text-gray-700">Pupillary Distance</span>
+                        </div>
+                        <span className="text-sm font-bold text-purple-900 bg-purple-50 px-3 py-1 rounded-lg">
+                          {item.prescriptionData.pd} mm
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Notes (if any) */}
+                  {item.prescriptionData.notes && (
+                    <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
+                      <div className="flex items-start space-x-2">
+                        <svg className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div>
+                          <p className="text-xs font-semibold text-yellow-900 mb-1">Additional Notes</p>
+                          <p className="text-xs text-yellow-800">{item.prescriptionData.notes}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
             

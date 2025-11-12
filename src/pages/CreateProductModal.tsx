@@ -22,6 +22,7 @@ import { Product } from '../types';
 import { createProduct, batchCreateProducts } from '../services/airtable';
 import { useLensOptions } from '../hooks/useLensOptions';
 import { useCoatingOptions } from '../hooks/useCoatingOptions';
+import { useToast } from '../contexts/ToastContext';
 
 interface CreateProductModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ interface CreateProductModalProps {
 }
 
 export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProductModalProps) {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'single' | 'bulk'>('single');
   const [loading, setLoading] = useState(false);
   
@@ -46,7 +48,6 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
   // Single Product Form State
-    // Single Product Form State
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     brand: '',
@@ -56,7 +57,7 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
     stock: 0,
     lensCompatible: false,
     features: [],
-    images: uploadedImages,  // ✅ FIXED: Start with uploaded (empty initially, fills during upload)
+    images: [],  // Start with empty array, fills during upload
     isActive: true
   });
 
@@ -75,25 +76,23 @@ export function CreateProductModal({ isOpen, onClose, onSuccess }: CreateProduct
   const { coatingOptions, loading: coatingLoading } = useCoatingOptions();
 
   // Single Product: Handle Form Submit
-  // Single Product: Handle Form Submit
 const handleSingleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   if (!formData.name || !formData.brand || (formData.price ?? 0) <= 0) {
-    alert('Please fill required fields (Name, Brand, Price).');
+    toast.warning('Please fill required fields (Name, Brand, Price).');
     return;
   }
   setLoading(true);
   try {
     // Parse features from comma-separated input
     const features = featuresInput ? featuresInput.split(',').map((f: string) => f.trim()).filter(Boolean) : [];
-    // ✅ FIXED: Use formData.images directly (populated during upload, no placeholder fallback)
-    const images = formData.images || [];  // Empty if no uploads (let Airtable handle default)
+    const images = formData.images || [];
     
     // Create product with lens and coating options
     await createProduct({ 
       ...formData, 
       features, 
-      images,  // Now always real URLs (or empty)
+      images,
       allowedLensOptions: selectedLensOptions,
       allowedCoatingOptions: selectedCoatingOptions
     });
@@ -101,7 +100,7 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
     onSuccess();
     onClose();
   } catch (error) {
-    alert('Failed to create product. Please try again.');
+    toast.error('Failed to create product. Please try again.');
   } finally {
     setLoading(false);
   }
@@ -193,7 +192,7 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
         setUploading(false);
       },
       error: () => {
-        alert('Failed to parse CSV. Please check the file format.');
+        toast.error('Failed to parse CSV. Please check the file format.');
         setUploading(false);
       }
     });
@@ -239,7 +238,7 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
       stock: 0,
       lensCompatible: false,
       features: [],
-      images: ['https://via.placeholder.com/500'],
+      images: [],  // Empty array, no placeholder
       isActive: true
     });
     setUploadedImages([]);
@@ -560,14 +559,14 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
                         if (files.length === 0) return;
 
                         setUploadingImages(true);
-                        const newUrls: string[] = [];
-                        const newPreviews: string[] = [];
 
-                        for (const file of files) {
-                          // Create preview
+                        // Upload all files sequentially
+                        for (let i = 0; i < files.length; i++) {
+                          const file = files[i];
+
+                          // Create preview first
                           const reader = new FileReader();
                           reader.onloadend = () => {
-                            newPreviews.push(reader.result as string);
                             setImagePreviews(prev => [...prev, reader.result as string]);
                           };
                           reader.readAsDataURL(file);
@@ -577,31 +576,36 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
                             const uploadFormData = new FormData();
                             uploadFormData.append('image', file);
 
-                            const response = await fetch(`http://134.209.6.174:3000/api/digitalOceanRoutes/uploadImage`, {
+                            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/digitalOceanRoutes/uploadImage`, {
                               method: 'POST',
                               body: uploadFormData,
                             });
 
+                            if (!response.ok) {
+                              toast.error(`Failed to upload ${file.name}: HTTP ${response.status}`);
+                              continue;
+                            }
+
                             const result = await response.json();
 
                             if (result.success && result.data?.url) {
-                              newUrls.push(result.data.url);
-                              // ✅ FIXED: Sync formData immediately after each upload
+                              // Update both states with the new URL
+                              setUploadedImages(prev => [...prev, result.data.url]);
                               setFormData(prev => ({
                                 ...prev,
                                 images: [...(prev.images || []), result.data.url]
                               }));
                             } else {
-                              alert(`Failed to upload ${file.name}`);
+                              toast.error(`Failed to upload ${file.name}: ${result.message || 'Unknown error'}`);
                             }
                           } catch (error) {
                             console.error('Image upload error:', error);
-                            alert(`Failed to upload ${file.name}`);
+                            toast.error(`Failed to upload ${file.name}`);
                           }
                         }
 
-                        setUploadedImages(prev => [...prev, ...newUrls]);
                         setUploadingImages(false);
+                        e.target.value = '';
                       }}
                       disabled={uploadingImages}
                       className="hidden"
@@ -623,6 +627,10 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
                             onClick={() => {
                               setImagePreviews(prev => prev.filter((_, i) => i !== index));
                               setUploadedImages(prev => prev.filter((_, i) => i !== index));
+                              setFormData(prev => ({
+                                ...prev,
+                                images: (prev.images || []).filter((_, i) => i !== index)
+                              }));
                             }}
                             className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                           >

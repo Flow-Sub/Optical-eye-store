@@ -29,7 +29,7 @@ const newArrivals = products.filter(p =>
   targetProductNames.newArrivals.some(name => p.name.includes(name.split(' – ')[0]))
   ).slice(0, 2);
 
-  const featuredProducts = products.slice(0, 4);
+  const featuredProducts = products.slice(0, 8);
 
   // URLs for VideoImageGrid
   const videoUrl = 'https://sfo3.digitaloceanspaces.com/optica-stock-images-storage/1762735379725_framer.mp4';

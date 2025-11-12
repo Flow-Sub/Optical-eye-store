@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload, User, Briefcase, Award, FileText, Save, Sparkles } from 'lucide-react';
+import { useToast } from '../contexts/ToastContext';
 
 interface CreateTeamMemberModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface CreateTeamMemberModalProps {
 }
 
 export function CreateTeamMemberModal({ isOpen, onClose, onSuccess, editingMember }: CreateTeamMemberModalProps) {
+  const toast = useToast();
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function CreateTeamMemberModal({ isOpen, onClose, onSuccess, editingMembe
       const uploadFormData = new FormData();
       uploadFormData.append('image', file);
 
-      const response = await fetch('https://a61ed92efa4e.ngrok-free.app/api/digitalOceanRoutes/uploadImage', {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/digitalOceanRoutes/uploadImage`, {
         method: 'POST',
         body: uploadFormData,
       });
@@ -76,14 +78,14 @@ export function CreateTeamMemberModal({ isOpen, onClose, onSuccess, editingMembe
 
       if (result.success && result.data?.url) {
         setUploadedImageUrl(result.data.url);
-        alert('✅ Image uploaded successfully!');
+        toast.success('Image uploaded successfully!');
       } else {
-        alert('❌ Failed to upload image: ' + (result.message || 'Unknown error'));
+        toast.error('Failed to upload image: ' + (result.message || 'Unknown error'));
         setImagePreview(null);
       }
     } catch (error) {
       console.error('Image upload error:', error);
-      alert('❌ Failed to upload image. Please try again.');
+      toast.error('Failed to upload image. Please try again.');
       setImagePreview(null);
     } finally {
       setUploadingImage(false);
@@ -94,11 +96,11 @@ export function CreateTeamMemberModal({ isOpen, onClose, onSuccess, editingMembe
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      alert('Please enter a name');
+      toast.warning('Please enter a name');
       return;
     }
     if (!formData.designation.trim()) {
-      alert('Please enter a designation');
+      toast.warning('Please enter a designation');
       return;
     }
 
@@ -135,13 +137,13 @@ export function CreateTeamMemberModal({ isOpen, onClose, onSuccess, editingMembe
         onSuccess();
         onClose();
         resetForm();
-        alert(editingMember ? '✅ Team member updated!' : '✅ Team member added!');
+        toast.success(editingMember ? 'Team member updated!' : 'Team member added!');
       } else {
-        alert('❌ ' + (result.message || 'Failed to save team member'));
+        toast.error(result.message || 'Failed to save team member');
       }
     } catch (error) {
       console.error('Error saving team member:', error);
-      alert('❌ Failed to save team member. Please try again.');
+      toast.error('Failed to save team member. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -1,22 +1,21 @@
 // TypeScript type definitions for FittingBox VTO
+// Based on official FittingBox Advanced API documentation
 
 export interface FitMixParams {
   apiKey: string;
   frame: string;
   onStopVto?: () => void;
-  onIssue?: (data: FitMixIssue) => void;
-}
-
-export interface FitMixIssue {
-  type?: string;
-  message?: string;
-  code?: string;
+  onIssue?: (data: any) => void;
+  onOpenStream?: (result: { success: boolean }) => void;
+  onLiveStatus?: (data: any) => void;
+  onMode?: (mode: string) => void;
 }
 
 export interface FitMixInstance {
-  startVto: (mode: 'live' | 'upload') => void;
+  startVto: (mode: 'live' | 'photo' | 'upload') => void;
   stopVto: () => void;
   setFrame: (frameCode: string) => void;
+  restartVto?: () => void;
 }
 
 declare global {
@@ -32,13 +31,6 @@ declare global {
   }
 }
 
-export interface VTOConfig {
-  apiKey: string;
-  scriptUrl: string;
-  containerId: string;
-  mode: 'live' | 'upload';
-}
-
 export interface VTOComponentProps {
   productName: string;
   eanCode?: string;
@@ -47,4 +39,3 @@ export interface VTOComponentProps {
 }
 
 export {};
-

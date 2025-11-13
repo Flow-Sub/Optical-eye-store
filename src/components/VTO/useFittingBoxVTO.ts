@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { VTO_CONFIG } from './config';
-import type { FitMixInstance, FitMixIssue } from './types';
+import type { FitMixInstance } from './types';
 
 interface UseFittingBoxVTOProps {
   eanCode: string;
@@ -11,15 +11,18 @@ interface UseFittingBoxVTOProps {
 interface UseFittingBoxVTOReturn {
   isLoading: boolean;
   error: string | null;
-  isWidgetReady: boolean;
+  status: string;
   containerRef: React.RefObject<HTMLDivElement>;
-  startVTO: () => void;
-  stopVTO: () => void;
 }
 
 /**
- * Custom hook to manage FittingBox VTO widget lifecycle
- * Handles script loading, widget initialization, and cleanup
+ * FittingBox VTO Hook - Industry Best Practice Pattern
+ * 
+ * Key Principles:
+ * 1. Destroy and recreate widget each time (no reuse)
+ * 2. Proper cleanup on unmount
+ * 3. Simple state management
+ * 4. Clear error handling
  */
 export function useFittingBoxVTO({
   eanCode,
@@ -28,157 +31,197 @@ export function useFittingBoxVTO({
 }: UseFittingBoxVTOProps): UseFittingBoxVTOReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-  const [isWidgetReady, setIsWidgetReady] = useState(false);
+  const [status, setStatus] = useState<string>('');
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const fitmixInstanceRef = useRef<FitMixInstance | null>(null);
+  const widgetRef = useRef<FitMixInstance | null>(null);
+  const isInitializingRef = useRef(false);
 
-  // Load FitMix script dynamically
+  // Main effect: Create widget when modal opens, destroy when it closes
   useEffect(() => {
-    if (!isOpen) return;
-
-    const existingScript = document.querySelector(`script[src="${VTO_CONFIG.SCRIPT_URL}"]`);
-
-    if (existingScript) {
-      console.log('[VTO] Script already loaded');
-      setIsScriptLoaded(true);
+    // Skip if not open or already initializing
+    if (!isOpen || isInitializingRef.current) {
       return;
     }
 
-    console.log('[VTO] Loading script...');
-    const script = document.createElement('script');
-    script.src = VTO_CONFIG.SCRIPT_URL;
-    script.type = 'text/javascript';
-    script.id = VTO_CONFIG.SCRIPT_ID;
-    
-    script.onload = () => {
-      console.log('[VTO] Script loaded successfully');
-      setTimeout(() => {
-        setIsScriptLoaded(true);
-      }, 100);
-    };
-    
-    script.onerror = (e) => {
-      console.error('[VTO] Script load error:', e);
-      setError(VTO_CONFIG.ERRORS.SCRIPT_LOAD_FAILED);
-      setIsLoading(false);
-    };
+    // Check prerequisites
+    if (!containerRef.current) {
+      console.error('[VTO] Container not ready');
+      return;
+    }
 
-    document.head.appendChild(script);
+    if (!window.FitMix) {
+      console.error('[VTO] FitMix SDK not loaded');
+      setError('Virtual Try-On SDK not loaded. Please refresh the page.');
+      return;
+    }
 
-    return () => {
-      // Cleanup on unmount
-      if (fitmixInstanceRef.current?.stopVto) {
-        try {
-          fitmixInstanceRef.current.stopVto();
-        } catch (e) {
-          console.error('[VTO] Cleanup error:', e);
-        }
-      }
-    };
-  }, [isOpen]);
+    // Initialize widget
+    const initializeWidget = async () => {
+      isInitializingRef.current = true;
+      setIsLoading(true);
+      setError(null);
+      setStatus('Initializing Virtual Try-On...');
 
-  // Initialize FitMix widget
-  useEffect(() => {
-    if (!isScriptLoaded || !isOpen || !containerRef.current) return;
+      console.log('[VTO] Creating fresh widget instance...');
+      console.log('[VTO] API Key:', apiKey);
+      console.log('[VTO] EAN Code:', eanCode);
 
-    setIsLoading(true);
-    setError(null);
-
-    let retryCount = 0;
-
-    const initWidget = () => {
       try {
-        console.log(`[VTO] Init attempt ${retryCount + 1}/${VTO_CONFIG.MAX_RETRIES}`);
-        
+        // Double-check FitMix is available
         if (!window.FitMix) {
-          if (retryCount < VTO_CONFIG.MAX_RETRIES) {
-            retryCount++;
-            setTimeout(initWidget, VTO_CONFIG.RETRY_DELAY);
-            return;
-          }
-          throw new Error(VTO_CONFIG.ERRORS.SDK_NOT_LOADED);
+          throw new Error('FitMix SDK not available');
         }
 
-        console.log('[VTO] SDK detected, creating widget...');
-
-        const params = {
-          apiKey,
-          frame: eanCode,
-          onStopVto: () => {
-            console.log('[VTO] Stopped');
-            setIsLoading(false);
-          },
-          onIssue: (data: FitMixIssue) => {
-            console.error('[VTO] Issue:', data);
-            
-            if (data.type === 'FRAME_NOT_FOUND' || data.message?.includes('not found')) {
-              setError(VTO_CONFIG.ERRORS.FRAME_NOT_FOUND);
-            } else {
-              setError(VTO_CONFIG.ERRORS.GENERIC);
-            }
-            setIsLoading(false);
-          },
-        };
-
-        const instance = window.FitMix.createWidget(
+        // Create widget
+        const widget = window.FitMix.createWidget(
           VTO_CONFIG.CONTAINER_ID,
-          params,
-          () => {
-            console.log('[VTO] Widget ready');
-            setIsWidgetReady(true);
-            setIsLoading(false);
+          {
+            apiKey,
+            frame: eanCode,
             
-            // Auto-start VTO
-            setTimeout(() => {
-              if (fitmixInstanceRef.current?.startVto) {
-                console.log('[VTO] Auto-starting...');
-                fitmixInstanceRef.current.startVto(VTO_CONFIG.DEFAULT_MODE);
+            // Callbacks
+            onStopVto: () => {
+              console.log('[VTO] onStopVto callback');
+              setIsLoading(false);
+              setStatus('');
+            },
+            
+            onIssue: (data: any) => {
+              console.log('[VTO] onIssue:', data);
+              
+              // Check if there's actually an issue (any flag is true)
+              const hasActualIssue = 
+                data.frameNotFound ||
+                data.cameraAccessDenied ||
+                data.noCameraFound ||
+                data.licenseNotFound ||
+                data.detectionFailed ||
+                data.liveIncompatibleBrowser ||
+                data.liveIncompatibleOS ||
+                data.protocolFailed ||
+                data.serverNotResponding;
+              
+              // Ignore if all flags are false (FittingBox calls this for logging)
+              if (!hasActualIssue) {
+                console.log('[VTO] onIssue called but no actual issue - ignoring');
+                return;
               }
-            }, VTO_CONFIG.AUTO_START_DELAY);
+              
+              // Handle actual errors
+              console.error('[VTO] Actual issue detected:', data);
+              
+              if (data.frameNotFound) {
+                setError('Frame not available. Please try a different product.');
+              } else if (data.cameraAccessDenied || data.noCameraFound) {
+                setError('Camera access denied. Please allow camera access and try again.');
+              } else if (data.licenseNotFound) {
+                setError('Invalid license. Please contact support.');
+              } else if (data.detectionFailed) {
+                setError('Face detection failed. Please ensure good lighting.');
+              } else if (data.liveIncompatibleBrowser || data.liveIncompatibleOS) {
+                setError('Browser not supported. Please use Chrome, Firefox, Safari, or Edge.');
+              } else if (data.protocolFailed) {
+                setError('VTO protocol failed. Please refresh and try again.');
+              } else if (data.serverNotResponding) {
+                setError('Server not responding. Please check your internet connection.');
+              } else {
+                setError('Unable to start Virtual Try-On. Please try again.');
+              }
+              
+              setIsLoading(false);
+            },
+            
+            onOpenStream: (result: any) => {
+              if (result.success) {
+                console.log('[VTO] Camera stream opened successfully');
+                setStatus('Camera ready! Position your face in the frame...');
+                setIsLoading(false);
+              }
+            },
+            
+            onLiveStatus: (data: any) => {
+              // Log live status for debugging
+              if (data.faceTracking && data.glassesReady) {
+                console.log('[VTO] Face tracked and glasses ready');
+                setStatus(''); // Clear status when fully ready
+                setIsLoading(false);
+              } else if (data.hasStream && !data.faceTracking) {
+                setStatus('Looking for your face...');
+              } else if (data.faceTracking && !data.glassesReady) {
+                setStatus('Loading glasses...');
+              }
+            },
+          },
+          () => {
+            // Widget ready callback
+            console.log('[VTO] Widget created, starting VTO...');
+            setStatus('Starting Virtual Try-On...');
+            
+            if (widget) {
+              widgetRef.current = widget;
+              
+              // Start VTO immediately
+              setTimeout(() => {
+                try {
+                  widget.startVto('live');
+                  console.log('[VTO] VTO started');
+                  setStatus('Requesting camera access...');
+                } catch (err) {
+                  console.error('[VTO] Error starting VTO:', err);
+                  setError('Failed to start Virtual Try-On.');
+                  setIsLoading(false);
+                  setStatus('');
+                }
+              }, 500);
+            }
+            
+            isInitializingRef.current = false;
           }
         );
 
-        fitmixInstanceRef.current = instance;
-        window.fitmixInstance = instance;
-        console.log('[VTO] Widget created');
-
       } catch (err: any) {
-        console.error('[VTO] Init error:', err);
-        setError(err.message || VTO_CONFIG.ERRORS.INIT_FAILED);
+        console.error('[VTO] Widget creation error:', err);
+        setError(err.message || 'Failed to initialize Virtual Try-On.');
         setIsLoading(false);
+        isInitializingRef.current = false;
       }
     };
 
-    const timer = setTimeout(initWidget, VTO_CONFIG.INIT_DELAY);
-    return () => clearTimeout(timer);
-  }, [isScriptLoaded, isOpen, eanCode, apiKey]);
+    initializeWidget();
 
-  // Manual start VTO
-  const startVTO = useCallback(() => {
-    if (fitmixInstanceRef.current?.startVto) {
-      console.log('[VTO] Manual start');
-      fitmixInstanceRef.current.startVto(VTO_CONFIG.DEFAULT_MODE);
-    }
-  }, []);
-
-  // Manual stop VTO
-  const stopVTO = useCallback(() => {
-    if (fitmixInstanceRef.current?.stopVto) {
-      console.log('[VTO] Manual stop');
-      fitmixInstanceRef.current.stopVto();
-      setIsWidgetReady(false);
-    }
-  }, []);
+    // Cleanup function - runs when modal closes or component unmounts
+    return () => {
+      console.log('[VTO] Cleanup: Destroying widget...');
+      
+      if (widgetRef.current) {
+        try {
+          // Stop VTO
+          if (widgetRef.current.stopVto) {
+            widgetRef.current.stopVto();
+          }
+          
+          // Clear reference
+          widgetRef.current = null;
+          
+          console.log('[VTO] Widget destroyed successfully');
+        } catch (err) {
+          console.error('[VTO] Cleanup error:', err);
+        }
+      }
+      
+      // Reset states
+      setIsLoading(false);
+      setError(null);
+      setStatus('');
+      isInitializingRef.current = false;
+    };
+  }, [isOpen, eanCode, apiKey]);
 
   return {
     isLoading,
     error,
-    isWidgetReady,
+    status,
     containerRef,
-    startVTO,
-    stopVTO,
   };
 }
-

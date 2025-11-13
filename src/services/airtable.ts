@@ -1,5 +1,6 @@
 import Airtable from 'airtable';
 import { Product } from '../types';
+import { normalizeImageUrls } from '../lib/utils';
 
 // Initialize Airtable
 const base = new Airtable({
@@ -12,34 +13,47 @@ const PRODUCTS_TABLE = import.meta.env.VITE_AIRTABLE_PRODUCTS_TABLE || 'Products
 const mapAirtableToProduct = (record: any): Product => {
   const fields = record.fields;
   
-  // ✅ Parse images from Image field (URLs as JSON string)
-  let images: string[] = ['https://via.placeholder.com/500'];
+  // ✅ Parse and normalize images from Image field (URLs as JSON string)
+  let images: string[] = [];
   
   if (fields['Image']) {
     try {
+      let rawImages: string[] = [];
+      
       // If Image field contains JSON array of URLs
       if (typeof fields['Image'] === 'string' && fields['Image'].startsWith('[')) {
-        images = JSON.parse(fields['Image']);
+        rawImages = JSON.parse(fields['Image']);
       }
       // If Image field is already an array
       else if (Array.isArray(fields['Image'])) {
-        images = fields['Image'];
+        rawImages = fields['Image'];
       }
       // If it's a single URL string
-      else if (typeof fields['Image'] === 'string' && fields['Image'].startsWith('http')) {
-        images = [fields['Image']];
+      else if (typeof fields['Image'] === 'string' && fields['Image'].length > 0) {
+        rawImages = [fields['Image']];
       }
+      
+      // ✅ Normalize URLs (add https:// if missing)
+      images = normalizeImageUrls(rawImages);
+      
     } catch (e) {
       console.warn('Failed to parse Image field, trying Photos field');
       // Fallback to Photos field
-      if (fields['Photos']) {
-        images = fields['Photos'].map((photo: { url: string }) => photo.url); // Fixed: Typed photo
+      if (fields['Photos'] && Array.isArray(fields['Photos'])) {
+        const photoUrls = fields['Photos'].map((photo: { url: string }) => photo.url);
+        images = normalizeImageUrls(photoUrls);
       }
     }
   }
   // Fallback to Photos field if Image is not present
-  else if (fields['Photos']) {
-    images = fields['Photos'].map((photo: { url: string }) => photo.url); // Fixed: Typed photo
+  else if (fields['Photos'] && Array.isArray(fields['Photos'])) {
+    const photoUrls = fields['Photos'].map((photo: { url: string }) => photo.url);
+    images = normalizeImageUrls(photoUrls);
+  }
+  
+  // Only use placeholder if no valid images found
+  if (images.length === 0) {
+    images = ['https://via.placeholder.com/500'];
   }
   
   return {
@@ -97,6 +111,9 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
   try {
     console.log('Creating product with data:', productData);
 
+    // ✅ Normalize image URLs before storing
+    const normalizedImages = normalizeImageUrls(productData.images || []);
+
     const record = await base(PRODUCTS_TABLE).create(
       {
         'Product Name': productData.name,
@@ -107,7 +124,7 @@ export const createProduct = async (productData: Partial<Product>): Promise<Prod
         'Stock Quantity': productData.stock || 0,
         'Lens Compatible': productData.lensCompatible || false,
         'Features': JSON.stringify(productData.features || []),
-        'Image': JSON.stringify(productData.images || []), // ✅ Store URLs as JSON
+        'Image': JSON.stringify(normalizedImages), // ✅ Store normalized URLs as JSON
         'Active Status': true,
         'Allowed Lens Options': productData.allowedLensOptions || [],
         'Allowed Coating Options': productData.allowedCoatingOptions || [],
@@ -160,7 +177,11 @@ export const updateProduct = async (id: string, updates: Partial<Product>): Prom
     if (updates.stock !== undefined) fields['Stock Quantity'] = updates.stock;
     if (updates.lensCompatible !== undefined) fields['Lens Compatible'] = updates.lensCompatible;
     if (updates.features) fields['Features'] = JSON.stringify(updates.features);
-    if (updates.images) fields['Image'] = JSON.stringify(updates.images); // ✅ Update image URLs
+    if (updates.images) {
+      // ✅ Normalize image URLs before updating
+      const normalizedImages = normalizeImageUrls(updates.images);
+      fields['Image'] = JSON.stringify(normalizedImages);
+    }
     if (updates.isActive !== undefined) fields['Active Status'] = updates.isActive;
 
     const record = await base(PRODUCTS_TABLE).update(
@@ -274,6 +295,33 @@ export const updateAppointmentStatus = async (
     const record = await base(APPOINTMENTS_TABLE).update(
       id,
       { Status: status },
+      { typecast: true }
+    );
+    return mapAirtableToAppointment(record);
+  } catch (error) {
+    console.error('Error updating appointment:', error);
+    throw new Error('Failed to update appointment');
+  }
+};
+
+// Update appointment with date, time, and event URI
+export const updateAppointment = async (
+  id: string,
+  updates: {
+    appointmentDate?: string;
+    appointmentTime?: string;
+    calendlyEventUri?: string;
+  }
+): Promise<Appointment> => {
+  try {
+    const fields: any = {};
+    if (updates.appointmentDate) fields['Appointment Date'] = updates.appointmentDate;
+    if (updates.appointmentTime) fields['Appointment Time'] = updates.appointmentTime;
+    if (updates.calendlyEventUri) fields['Calendly Event URI'] = updates.calendlyEventUri;
+
+    const record = await base(APPOINTMENTS_TABLE).update(
+      id,
+      fields,
       { typecast: true }
     );
     return mapAirtableToAppointment(record);

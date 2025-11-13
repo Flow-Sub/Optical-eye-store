@@ -7,6 +7,9 @@ export interface BookingData {
   email: string;
   phone: string;
   notes: string;
+  selectedDate?: string;
+  selectedTime?: string;
+  calendlyEventUri?: string;
 }
 
 export interface FormattedService {

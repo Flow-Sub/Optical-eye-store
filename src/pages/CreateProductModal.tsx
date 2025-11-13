@@ -23,6 +23,7 @@ import { createProduct, batchCreateProducts } from '../services/airtable';
 import { useLensOptions } from '../hooks/useLensOptions';
 import { useCoatingOptions } from '../hooks/useCoatingOptions';
 import { useToast } from '../contexts/ToastContext';
+import { ensureUrlProtocol } from '../lib/utils';
 
 interface CreateProductModalProps {
   isOpen: boolean;
@@ -589,11 +590,14 @@ const handleSingleSubmit = async (e: React.FormEvent) => {
                             const result = await response.json();
 
                             if (result.success && result.data?.url) {
-                              // Update both states with the new URL
-                              setUploadedImages(prev => [...prev, result.data.url]);
+                              // ✅ Normalize URL (add https:// if missing)
+                              const normalizedUrl = ensureUrlProtocol(result.data.url);
+                              
+                              // Update both states with the normalized URL
+                              setUploadedImages(prev => [...prev, normalizedUrl]);
                               setFormData(prev => ({
                                 ...prev,
-                                images: [...(prev.images || []), result.data.url]
+                                images: [...(prev.images || []), normalizedUrl]
                               }));
                             } else {
                               toast.error(`Failed to upload ${file.name}: ${result.message || 'Unknown error'}`);

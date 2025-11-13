@@ -8,20 +8,11 @@ import type { VTOComponentProps } from './types';
 /**
  * FittingBox Virtual Try-On Component
  * 
- * A complete VTO solution that handles:
- * - Dynamic script loading
- * - Widget initialization
- * - Modal UI
- * - Error handling
- * - Cleanup
- * 
- * @example
- * ```tsx
- * <FittingBoxVTO 
- *   productName="Ray-Ban Classic"
- *   eanCode="8056597149013"
- * />
- * ```
+ * Clean, simple implementation:
+ * - Opens modal on button click
+ * - Creates fresh VTO widget each time
+ * - Destroys widget on close
+ * - No complex state management
  */
 export function FittingBoxVTO({
   productName,
@@ -31,42 +22,36 @@ export function FittingBoxVTO({
 }: VTOComponentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const {
-    isLoading,
-    error,
-    isWidgetReady,
-    containerRef,
-    stopVTO,
-  } = useFittingBoxVTO({
+  const { isLoading, error, status, containerRef } = useFittingBoxVTO({
     eanCode,
     apiKey,
     isOpen: isModalOpen,
   });
 
-  const handleOpenModal = () => {
+  const handleOpen = () => {
+    console.log('[VTO Component] Opening modal');
     setIsModalOpen(true);
   };
 
-  const handleCloseModal = () => {
-    stopVTO();
+  const handleClose = () => {
+    console.log('[VTO Component] Closing modal');
     setIsModalOpen(false);
     onClose?.();
   };
 
   return (
     <>
-      <VTOButton onClick={handleOpenModal} />
+      <VTOButton onClick={handleOpen} />
       
       <VTOModal
         isOpen={isModalOpen}
         productName={productName}
         isLoading={isLoading}
         error={error}
-        isWidgetReady={isWidgetReady}
+        status={status}
         containerRef={containerRef}
-        onClose={handleCloseModal}
+        onClose={handleClose}
       />
     </>
   );
 }
-
